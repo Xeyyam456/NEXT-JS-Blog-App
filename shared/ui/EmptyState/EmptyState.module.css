@@ -1,0 +1,41 @@
+.root {
+  display: grid;
+  gap: 1rem;
+  padding: 1.4rem;
+  border-radius: 28px;
+  border: 1px dashed rgba(140, 168, 255, 0.22);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 65%),
+    rgba(255, 255, 255, 0.02);
+}
+
+.copy {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display), serif;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  line-height: 0.95;
+}
+
+.description {
+  margin: 0;
+  max-width: 48ch;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .actions :global(a) {
+    width: 100%;
+  }
+}

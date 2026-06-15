@@ -1,11 +1,26 @@
 import http from "./http";
-import { runRequest, unwrapRequest } from "@/shared/services/request-handlers";
+import { runRequest, unwrapRequest } from "./request-handlers";
+
+const DISPLAY_ID_OFFSET = 0;
+
+function normalizePost(post) {
+  if (!post || typeof post !== "object") {
+    return post;
+  }
+
+  const numericId = Number(post.id);
+
+  return {
+    ...post,
+    displayId: Number.isFinite(numericId) ? numericId + DISPLAY_ID_OFFSET : post.id,
+  };
+}
 
 export async function listPosts() {
   const result = await unwrapRequest({
     request: async () => {
       const { data } = await http.get("");
-      return Array.isArray(data) ? data : [];
+      return Array.isArray(data) ? data.map(normalizePost) : [];
     },
     successMessage: "Posts loaded successfully.",
     errorMessage: "Unable to fetch posts.",
@@ -18,7 +33,7 @@ export async function readPost(id) {
   const result = await unwrapRequest({
     request: async () => {
       const { data } = await http.get(`/${id}`);
-      return data;
+      return normalizePost(data);
     },
     successMessage: `Post ${id} loaded successfully.`,
     errorMessage: `Unable to fetch post ${id}.`,

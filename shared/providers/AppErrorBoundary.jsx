@@ -20,7 +20,7 @@ export default class AppErrorBoundary extends Component {
   }
 
   componentDidCatch(error) {
-    console.error("App error boundary caught an error:", error);
+    console.error(error);
   }
 
   handleReset = () => {
@@ -34,10 +34,10 @@ export default class AppErrorBoundary extends Component {
     if (this.state.hasError) {
       return (
         <StatusPanel
-          kicker="Client error"
-          title="A client-side error interrupted this page."
-          description={this.state.error?.message || "Unexpected error."}
-          actionLabel="Try Again"
+          kicker="Something went wrong"
+          title="This part of the page crashed."
+          description={this.state.error?.message || "Please try again."}
+          actionLabel="Try again"
           onAction={this.handleReset}
         />
       );

@@ -1,7 +1,7 @@
 "use client";
 
-import { createPost, updatePost } from "@/features/posts/services/posts";
-import { notifyError, notifySuccess } from "@/shared/lib/notifications";
+import { useSavePost } from "@/features/posts/hooks";
+import { Button } from "@/shared/ui";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import styles from "./PostForm.module.css";
@@ -9,6 +9,7 @@ import styles from "./PostForm.module.css";
 const EMPTY_FORM = {
   title: "",
   body: "",
+  imageUrl: "",
 };
 
 export default function PostForm({ mode, post }) {
@@ -16,11 +17,12 @@ export default function PostForm({ mode, post }) {
   const [formData, setFormData] = useState({
     title: post?.title || EMPTY_FORM.title,
     body: post?.body || EMPTY_FORM.body,
+    imageUrl: post?.imageUrl || EMPTY_FORM.imageUrl,
   });
-  const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const isEditMode = mode === "edit";
+  const { error, isEditMode, isSubmitting, savePost } = useSavePost({
+    mode,
+    postId: post?.id,
+  });
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -33,35 +35,7 @@ export default function PostForm({ mode, post }) {
 
   async function handleSubmit(event) {
     event.preventDefault();
-    setError("");
-    setIsSubmitting(true);
-
-    try {
-      const result = isEditMode
-        ? await updatePost(post.id, formData)
-        : await createPost(formData);
-
-      if (!result.ok) {
-        throw result.error;
-      }
-
-      const savedPost = result.data;
-
-      notifySuccess(
-        isEditMode ? "Post updated" : "Post published",
-        result.message
-      );
-
-      router.push(isEditMode ? `/posts/${post.id}` : `/posts/${savedPost.id}`);
-      router.refresh();
-    } catch (requestError) {
-      const message = requestError.message || "Unable to save the post.";
-
-      setError(message);
-      notifyError("Request failed", message);
-    } finally {
-      setIsSubmitting(false);
-    }
+    await savePost(formData);
   }
 
   return (
@@ -80,6 +54,17 @@ export default function PostForm({ mode, post }) {
           />
         </label>
 
+        <label className={styles.field}>
+          <span>Image URL</span>
+          <input
+            type="url"
+            name="imageUrl"
+            value={formData.imageUrl}
+            onChange={handleChange}
+            placeholder="https://images.example.com/story-cover.jpg"
+          />
+        </label>
+
         <label className={`${styles.field} ${styles.fieldWide}`}>
           <span>Story body</span>
           <textarea
@@ -88,7 +73,6 @@ export default function PostForm({ mode, post }) {
             onChange={handleChange}
             placeholder="Shape the full article here"
             rows={10}
-            minLength={10}
             required
           />
         </label>
@@ -97,7 +81,7 @@ export default function PostForm({ mode, post }) {
       {error ? <p className={`feedback error-text ${styles.error}`}>{error}</p> : null}
 
       <div className={styles.actions}>
-        <button type="submit" className="primary-button" disabled={isSubmitting}>
+        <Button type="submit" variant="primary" disabled={isSubmitting}>
           {isSubmitting
             ? isEditMode
               ? "Saving edits..."
@@ -105,15 +89,15 @@ export default function PostForm({ mode, post }) {
             : isEditMode
               ? "Save Changes"
               : "Publish Post"}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="secondary-button"
+          variant="secondary"
           onClick={() => router.back()}
           disabled={isSubmitting}
         >
           Go Back
-        </button>
+        </Button>
       </div>
     </form>
   );

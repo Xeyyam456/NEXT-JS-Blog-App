@@ -1,100 +1,62 @@
 "use client";
 
-import { deletePost } from "@/features/posts/services/posts";
-import { notifyError, notifyInfo, notifySuccess } from "@/shared/lib/notifications";
-import { Modal } from "@/shared/ui";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useDeletePost } from "@/features/posts/hooks";
+import { useDisclosure } from "@/shared/hooks";
+import { notifyInfo } from "@/shared/lib/notifications";
+import { Button, ConfirmModal } from "@/shared/ui";
 import styles from "./DeletePostButton.module.css";
 
-export default function DeletePostButton({ postId }) {
-  const router = useRouter();
-  const [error, setError] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+export default function DeletePostButton({
+  postId,
+  buttonLabel = "Delete Story",
+  buttonSize,
+  showInlineError = true,
+}) {
+  const { isOpen, open, close } = useDisclosure();
+  const { error, isDeleting, handleDelete } = useDeletePost(postId);
 
-  function openModal() {
-    setIsModalOpen(true);
-  }
+  async function handleConfirmDelete() {
+    const result = await handleDelete();
 
-  function closeModal() {
-    setIsModalOpen(false);
-  }
-
-  async function handleDelete() {
-    setError("");
-    setIsDeleting(true);
-
-    try {
-      const result = await deletePost(postId);
-
-      if (!result.ok) {
-        throw result.error;
-      }
-
-      setIsModalOpen(false);
-      notifySuccess("Post deleted", result.message);
-      router.push("/");
-      router.refresh();
-    } catch (requestError) {
-      const message = requestError.message || "Unable to delete the post.";
-
-      setError(message);
-      notifyError("Delete failed", message);
-    } finally {
-      setIsDeleting(false);
+    if (result) {
+      close();
     }
   }
 
   return (
     <div className={styles.root}>
-      <button
+      <Button
         type="button"
-        onClick={openModal}
-        className="danger-button"
+        onClick={open}
+        variant="danger"
+        size={buttonSize}
         disabled={isDeleting}
       >
-        {isDeleting ? "Deleting..." : "Delete Story"}
-      </button>
+        {isDeleting ? "Deleting..." : buttonLabel}
+      </Button>
 
-      <Modal
-        isOpen={isModalOpen}
+      <ConfirmModal
+        isOpen={isOpen}
         onClose={() => {
           if (isDeleting) {
             return;
           }
 
-          closeModal();
+          close();
           notifyInfo("Delete cancelled", "The post was kept unchanged.");
         }}
         title="Delete this story?"
         description="This action permanently removes the post from the live API and cannot be undone."
-        footer={(
-          <>
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() => {
-                closeModal();
-                notifyInfo("Delete cancelled", "The post was kept unchanged.");
-              }}
-              disabled={isDeleting}
-            >
-              Keep Story
-            </button>
-            <button
-              type="button"
-              className="danger-button"
-              onClick={handleDelete}
-              disabled={isDeleting}
-            >
-              {isDeleting ? "Deleting..." : "Confirm Delete"}
-            </button>
-          </>
-        )}
+        cancelLabel="Keep Story"
+        confirmLabel={isDeleting ? "Deleting..." : "Confirm Delete"}
+        confirmButtonClassName="danger-button"
+        isPending={isDeleting}
+        onConfirm={handleConfirmDelete}
       />
 
-      {error ? <p className={`feedback error-text ${styles.error}`}>{error}</p> : null}
+      {showInlineError && error ? (
+        <p className={`feedback error-text ${styles.error}`}>{error}</p>
+      ) : null}
     </div>
   );
 }

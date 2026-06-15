@@ -1,16 +1,16 @@
 import { PostCard } from "@/features/posts/components";
-import { getPosts } from "@/features/posts/services/server-posts";
+import { getPosts } from "@/services/server-posts";
+import { EmptyState } from "@/shared/ui";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const posts = await getPosts();
-  const spotlightPost = posts[0];
 
   return (
     <main className="page-shell">
-      <section className="hero-grid">
+      <section className="hero-grid hero-grid-wide">
         <article className="hero-story panel-surface">
           <div className="hero-copy">
             <span className="section-chip">Live API Journal</span>
@@ -45,24 +45,6 @@ export default async function HomePage() {
             </div>
           </div>
         </article>
-
-        <aside className="spotlight-card panel-surface">
-          <p className="section-kicker">Spotlight</p>
-          {spotlightPost ? (
-            <>
-              <h2>{spotlightPost.title}</h2>
-              <p>{spotlightPost.body}</p>
-              <Link href={`/posts/${spotlightPost.id}`} className="text-link">
-                Read featured story
-              </Link>
-            </>
-          ) : (
-            <>
-              <h2>No spotlight yet</h2>
-              <p>Publish a post and it will appear here right away.</p>
-            </>
-          )}
-        </aside>
       </section>
 
       <section className="content-section panel-surface">
@@ -77,10 +59,13 @@ export default async function HomePage() {
         </div>
 
         {posts.length === 0 ? (
-          <div className="empty-state">
-            <h3>No posts available</h3>
-            <p>Use the create page to publish the first article.</p>
-          </div>
+          <EmptyState
+            kicker="Your archive is empty"
+            title="Only your own posts appear here"
+            description="This list shows only the stories created from this browser. Publish a new post and it will appear here immediately."
+            actionLabel="Write New Post"
+            actionHref="/create"
+          />
         ) : (
           <div className="post-grid">
             {posts.map((post) => (
