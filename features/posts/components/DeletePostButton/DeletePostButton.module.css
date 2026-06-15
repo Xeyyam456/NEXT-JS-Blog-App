@@ -1,0 +1,8 @@
+.root {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.error {
+  margin: 0;
+}

@@ -1,5 +1,5 @@
-import { getPosts } from "@/services/server-posts";
-import PostCard from "@/components/PostCard";
+import { PostCard } from "@/features/posts/components";
+import { getPosts } from "@/features/posts/services/server-posts";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";

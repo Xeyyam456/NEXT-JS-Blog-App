@@ -1,5 +1,6 @@
 import "../styles/globals.css";
 import { Cormorant_Garamond, Space_Grotesk } from "next/font/google";
+import { AppErrorBoundary, AppToaster } from "@/shared/providers";
 import Link from "next/link";
 
 const displayFont = Cormorant_Garamond({
@@ -38,8 +39,9 @@ export default function RootLayout({ children }) {
             </nav>
           </header>
 
-          {children}
+          <AppErrorBoundary>{children}</AppErrorBoundary>
         </div>
+        <AppToaster />
       </body>
     </html>
   );

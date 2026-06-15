@@ -1,0 +1,33 @@
+.root {
+  isolation: isolate;
+}
+
+.panel {
+  align-items: flex-start;
+}
+
+.title {
+  margin: 0.8rem 0 0;
+}
+
+.description {
+  max-width: 52ch;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 640px) {
+  .actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .actions :global(.primary-button) {
+    width: 100%;
+  }
+}
