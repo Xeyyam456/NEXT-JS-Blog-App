@@ -38,6 +38,22 @@ export default function PostForm({ mode, post }) {
     await savePost(formData);
   }
 
+  function getSubmitLabel() {
+    if (isSubmitting && isEditMode) {
+      return "Saving edits...";
+    }
+
+    if (isSubmitting) {
+      return "Publishing...";
+    }
+
+    if (isEditMode) {
+      return "Save Changes";
+    }
+
+    return "Publish Post";
+  }
+
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
       <div className={styles.grid}>
@@ -82,13 +98,7 @@ export default function PostForm({ mode, post }) {
 
       <div className={styles.actions}>
         <Button type="submit" variant="primary" disabled={isSubmitting}>
-          {isSubmitting
-            ? isEditMode
-              ? "Saving edits..."
-              : "Publishing..."
-            : isEditMode
-              ? "Save Changes"
-              : "Publish Post"}
+          {getSubmitLabel()}
         </Button>
         <Button
           type="button"

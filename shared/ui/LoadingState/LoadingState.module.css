@@ -1,64 +1,62 @@
 .shell {
   width: min(1180px, calc(100% - 2rem));
   margin: 0 auto;
-  padding: 1.5rem 0 4rem;
+  padding: 1rem 0 5rem;
 }
 
 .panel {
   display: grid;
   gap: 1.5rem;
   margin-top: 1rem;
-  padding: 1.5rem;
+  padding: 2rem;
   border: 1px solid var(--line);
-  border-radius: 32px;
+  border-radius: var(--radius);
   background: var(--panel);
-  backdrop-filter: blur(18px);
   box-shadow: var(--shadow);
 }
 
 .header {
   display: grid;
-  gap: 0.9rem;
+  gap: 0.6rem;
   max-width: 52rem;
 }
 
 .title {
   margin: 0;
-  font-family: var(--font-display), serif;
-  font-size: clamp(2.6rem, 5vw, 4.2rem);
-  line-height: 0.95;
-  letter-spacing: -0.03em;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 600;
+  font-size: clamp(1.7rem, 3.2vw, 2.3rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
 
 .description {
   margin: 0;
   color: var(--muted);
-  line-height: 1.75;
+  line-height: 1.7;
 }
 
 .skeletonGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-  margin-top: 1.5rem;
+  gap: 1.25rem;
+  margin-top: 1rem;
 }
 
 .skeletonCard {
-  min-height: 300px;
+  min-height: 280px;
   position: relative;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 28px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 28%),
-    var(--panel-strong);
+  border-radius: var(--radius);
+  background: var(--panel-strong);
 }
 
 .skeletonCard::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
   transform: translateX(-100%);
   animation: shimmer 1.3s infinite;
 }
@@ -81,7 +79,6 @@
   }
 
   .panel {
-    padding: 1.1rem;
-    border-radius: 24px;
+    padding: 1.2rem;
   }
 }

@@ -1,34 +1,34 @@
 .shell {
   width: min(1180px, calc(100% - 2rem));
   margin: 0 auto;
-  padding: 1.5rem 0 4rem;
+  padding: 1rem 0 5rem;
 }
 
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.75fr);
-  gap: 1rem;
+  gap: 1.5rem;
   margin-top: 1rem;
-  padding: 1.5rem;
+  padding: 2rem;
   border: 1px solid var(--line);
-  border-radius: 32px;
+  border-radius: var(--radius);
   background: var(--panel);
-  backdrop-filter: blur(18px);
   box-shadow: var(--shadow);
 }
 
 .column h1 {
-  margin: 0.8rem 0 0;
-  font-family: var(--font-display), serif;
-  font-size: clamp(2.4rem, 4.5vw, 4rem);
-  line-height: 0.95;
-  letter-spacing: -0.03em;
+  margin: 0.5rem 0 0;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 600;
+  font-size: clamp(1.9rem, 3.6vw, 2.6rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
 
 .body {
-  margin: 1.4rem 0 0;
+  margin: 1.3rem 0 0;
   color: var(--muted);
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   line-height: 1.75;
   white-space: pre-wrap;
 }
@@ -38,10 +38,10 @@
   width: 100%;
   margin-top: 1.25rem;
   border: 1px solid var(--line);
-  border-radius: 24px;
+  border-radius: var(--radius-small);
   overflow: hidden;
   aspect-ratio: 16 / 9;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--panel-strong);
 }
 
 .coverImage {
@@ -53,8 +53,8 @@
   gap: 1.2rem;
   padding: 1.2rem;
   border: 1px solid var(--line);
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-small);
+  background: var(--panel-strong);
   align-content: start;
 }
 
@@ -64,15 +64,16 @@
 }
 
 .sidebarLabel {
-  font-size: 0.82rem;
-  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+  color: var(--muted);
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.85rem;
+  gap: 0.65rem;
 }
 
 @media (max-width: 980px) {
@@ -87,8 +88,7 @@
   }
 
   .layout {
-    padding: 1.1rem;
-    border-radius: 24px;
+    padding: 1.2rem;
   }
 
   .actions {

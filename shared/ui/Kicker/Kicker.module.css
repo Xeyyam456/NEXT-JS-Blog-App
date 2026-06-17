@@ -1,19 +1,17 @@
 .kicker {
   display: inline-flex;
   width: fit-content;
-  padding: 0.45rem 0.8rem;
-  border: 1px solid rgba(255, 209, 102, 0.22);
+  padding: 0.35rem 0.7rem;
   border-radius: 999px;
-  background: rgba(255, 209, 102, 0.12);
+  background: var(--accent-soft);
   color: var(--accent-strong);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .muted {
-  border-color: rgba(131, 225, 216, 0.22);
-  background: rgba(131, 225, 216, 0.08);
-  color: var(--accent-cool);
+  background: var(--panel-strong);
+  color: var(--muted);
 }

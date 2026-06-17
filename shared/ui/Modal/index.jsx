@@ -1,6 +1,7 @@
 "use client";
 
 import { useId } from "react";
+import { createPortal } from "react-dom";
 import { useModalLifecycle } from "@/shared/hooks";
 import Kicker from "../Kicker";
 import styles from "./Modal.module.css";
@@ -21,7 +22,7 @@ export default function Modal({
     return null;
   }
 
-  return (
+  return createPortal(
     <div className={styles.overlay} role="presentation" onClick={onClose}>
       <div
         className={styles.panel}
@@ -45,7 +46,7 @@ export default function Modal({
             onClick={onClose}
             aria-label="Close modal"
           >
-            Close
+            <span aria-hidden="true">&times;</span>
           </button>
         </div>
 
@@ -59,6 +60,7 @@ export default function Modal({
 
         {footer ? <div className={styles.footer}>{footer}</div> : null}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

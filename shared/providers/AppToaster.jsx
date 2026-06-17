@@ -8,6 +8,7 @@ export default function AppToaster() {
     <Toaster
       richColors
       closeButton
+      theme="dark"
       position="top-right"
       toastOptions={{
         className: styles.toast,

@@ -15,7 +15,7 @@ export function notifyError(message, description) {
 }
 
 export function notifyInfo(message, description) {
-  toast(message, {
+  toast.warning(message, {
     description,
   });
 }

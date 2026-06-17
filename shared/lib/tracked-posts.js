@@ -13,7 +13,15 @@ function normalizePostId(postId) {
 }
 
 function uniquePostIds(postIds) {
-  return [...new Set(postIds)];
+  const uniqueIds = [];
+
+  for (const postId of postIds) {
+    if (!uniqueIds.includes(postId)) {
+      uniqueIds.push(postId);
+    }
+  }
+
+  return uniqueIds;
 }
 
 export function parseTrackedPostIds(rawValue) {
@@ -21,12 +29,18 @@ export function parseTrackedPostIds(rawValue) {
     return [];
   }
 
-  return uniquePostIds(
-    rawValue
-      .split(",")
-      .map((value) => normalizePostId(value.trim()))
-      .filter((postId) => postId !== null)
-  );
+  const rawIds = rawValue.split(",");
+  const validIds = [];
+
+  for (const rawId of rawIds) {
+    const postId = normalizePostId(rawId.trim());
+
+    if (postId !== null) {
+      validIds.push(postId);
+    }
+  }
+
+  return uniquePostIds(validIds);
 }
 
 export function addTrackedPostId(postIds, postId) {
@@ -50,10 +64,17 @@ export function removeTrackedPostId(postIds, postId) {
 }
 
 export function serializeTrackedPostIds(postIds) {
-  return uniquePostIds(postIds)
-    .map((postId) => normalizePostId(postId))
-    .filter((postId) => postId !== null)
-    .join(",");
+  const validIds = [];
+
+  for (const postId of uniquePostIds(postIds)) {
+    const normalizedId = normalizePostId(postId);
+
+    if (normalizedId !== null) {
+      validIds.push(normalizedId);
+    }
+  }
+
+  return validIds.join(",");
 }
 
 function readBrowserCookie(name) {
@@ -62,10 +83,17 @@ function readBrowserCookie(name) {
   }
 
   const cookiePrefix = `${name}=`;
-  const cookieEntry = document.cookie
-    .split(";")
-    .map((value) => value.trim())
-    .find((value) => value.startsWith(cookiePrefix));
+  const allCookies = document.cookie.split(";");
+  let cookieEntry = "";
+
+  for (const rawCookie of allCookies) {
+    const trimmedCookie = rawCookie.trim();
+
+    if (trimmedCookie.startsWith(cookiePrefix)) {
+      cookieEntry = trimmedCookie;
+      break;
+    }
+  }
 
   if (!cookieEntry) {
     return "";

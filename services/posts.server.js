@@ -12,20 +12,17 @@ async function getTrackedPostIds() {
 
 export async function getPosts() {
   const trackedPostIds = await getTrackedPostIds();
+  const posts = [];
 
-  if (trackedPostIds.length === 0) {
-    return [];
+  for (const postId of trackedPostIds) {
+    const result = await readPost(postId);
+
+    if (result.result) {
+      posts.push(result.data);
+    }
   }
 
-  const posts = await Promise.all(
-    trackedPostIds.map(async (postId) => {
-      const result = await readPost(postId);
-
-      return result.result ? result.data : null;
-    })
-  );
-
-  return posts.filter((post) => post !== null);
+  return posts;
 }
 
 export async function getPost(id) {

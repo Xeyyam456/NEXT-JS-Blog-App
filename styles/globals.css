@@ -1,19 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --font-display: Georgia, "Times New Roman", serif;
-  --font-body: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --background: #0b1020;
-  --foreground: #e7ecf7;
-  --muted: #9ca9c6;
-  --panel: rgba(13, 20, 38, 0.72);
-  --panel-strong: rgba(18, 27, 48, 0.94);
-  --line: rgba(140, 168, 255, 0.18);
-  --accent: #ff6b4a;
-  --accent-strong: #ffd166;
-  --accent-cool: #83e1d8;
-  --danger: #ff7988;
-  --shadow: 0 30px 80px rgba(2, 6, 23, 0.45);
+  --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, ui-sans-serif, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, ui-sans-serif, sans-serif;
+  --background: #0a0a0c;
+  --foreground: #f2f2f5;
+  --muted: #8c8c96;
+  --panel: #131316;
+  --panel-strong: #1a1a1f;
+  --line: rgba(255, 255, 255, 0.09);
+  --accent: #6366f1;
+  --accent-strong: #818cf8;
+  --accent-soft: rgba(99, 102, 241, 0.14);
+  --danger: #f15b6c;
+  --danger-soft: rgba(241, 91, 108, 0.14);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 28px rgba(0, 0, 0, 0.35);
+  --shadow-lift: 0 1px 2px rgba(0, 0, 0, 0.4), 0 20px 40px rgba(0, 0, 0, 0.45);
+  --radius: 14px;
+  --radius-small: 9px;
 }
 
 * {
@@ -27,13 +31,12 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
+  display: flex;
+  flex-direction: column;
   color: var(--foreground);
   font-family: var(--font-body), sans-serif;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(255, 107, 74, 0.22), transparent 24%),
-    radial-gradient(circle at 80% 0%, rgba(131, 225, 216, 0.2), transparent 20%),
-    radial-gradient(circle at 50% 100%, rgba(99, 102, 241, 0.26), transparent 28%),
-    linear-gradient(180deg, #060916 0%, #0b1020 45%, #10172b 100%);
+  background: var(--background);
+  -webkit-font-smoothing: antialiased;
 }
 
 body::before {
@@ -41,11 +44,10 @@ body::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-  background-size: 32px 32px;
-  mask-image: radial-gradient(circle at center, black, transparent 80%);
+  z-index: 0;
+  background:
+    radial-gradient(640px circle at 18% 0%, rgba(99, 102, 241, 0.16), transparent 60%),
+    radial-gradient(520px circle at 100% 14%, rgba(99, 102, 241, 0.08), transparent 55%);
 }
 
 a {
@@ -57,4 +59,13 @@ button,
 input,
 textarea {
   font: inherit;
+}
+
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+::placeholder {
+  color: var(--muted);
 }

@@ -1,31 +1,35 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Bu fayl Claude Code-a (claude.ai/code) bu repo üzərində işləyərkən bələdçilik etmək üçündür.
 
 @AGENTS.md
 
-## Commands
+## Əmrlər
 
-- `npm run dev` — start the dev server (http://localhost:3000)
-- `npm run build` — production build
-- `npm run start` — run the production build
+- `npm run dev` — dev server-i başladır (http://localhost:3000)
+- `npm run build` — production build yaradır
+- `npm run start` — production build-i işə salır
 - `npm run lint` — ESLint (flat config, `eslint-config-next/core-web-vitals`)
 
-There is no test suite/framework configured in this repo.
+Bu repoda test suite/framework konfiqurasiya olunmayıb.
 
-## Architecture
+## Arxitektura
 
-This is "Pulse Press", a Next.js App Router blog CRUD app with **no database or auth of its own** — all post data lives on a shared public external API.
+Bu "Pulse Press" adlı, Next.js App Router əsaslı blog CRUD tətbiqidir. Layihənin **öz database-i və auth-u yoxdur** — bütün post datası paylaşılan, xarici (üçüncü tərəf) bir API-da saxlanılır.
 
-- `services/http.js` — single axios instance, `baseURL` pointed at `https://blog-api-t6u0.onrender.com/posts` (a third-party API shared by all users of this codebase, not something this repo controls).
-- `services/request-handlers.js` — `successHandler(response)` / `errorHandler(error)` normalize any axios response/error into `{ data, status, result }` (`result` is a boolean).
-- `services/posts.js` — raw CRUD against the API (`readPost`, `createPost`, `updatePost`, `deletePost`), built on the handlers above. Every function always returns the `{ data, status, result }` object (never throws) so callers branch on `result.result`. `normalizePost` adds a `displayId` field mirroring `id` and is applied to every function's `data`.
-- `services/posts.server.js` — server-only (uses `next/headers` `cookies()`); this is what every page imports for reads, never `services/posts.js` directly.
+- `services/http.js` — tək axios instansı, `baseURL` `https://blog-api-t6u0.onrender.com/posts`-a yönəlib (bu repo-nun nəzarət etmədiyi, bütün istifadəçilər tərəfindən paylaşılan üçüncü tərəf API).
+- `services/request-handlers.js` — `successHandler(response)` / `errorHandler(error)` istənilən axios cavabını/xətasını `{ data, status, result }` formasına salır (`result` boolean-dır).
+- `services/posts.js` — API-ya qarşı CRUD funksiyaları (`readPost`, `createPost`, `updatePost`, `deletePost`), yuxarıdakı handler-lərin üzərində qurulub. Hər funksiya HƏMİŞƏ `{ data, status, result }` obyektini qaytarır (heç vaxt throw etmir) — çağıran tərəf `result.result`-a görə qərar verir. `normalizePost` hər funksiyanın data-sına `id`-ni güzgüləyən `displayId` sahəsi əlavə edir.
+- `services/posts.server.js` — yalnız server tərəfdə işləyir (`next/headers`-dən `cookies()` istifadə edir); bütün səhifələr oxuma üçün bunu import edir, `services/posts.js`-i birbaşa YOX.
 
-**Ownership model:** because the external API has no concept of users, "your posts" is simulated entirely client-side. Whenever a post is created, its id is appended to a cookie (`pulse-owned-post-ids`, see `shared/lib/tracked-posts.js`) and that cookie is the only record of which posts belong to the current browser. `services/posts.server.js#getPosts`/`getPost` read that cookie and filter/guard against it — a post that exists on the shared API but isn't in the cookie is treated as not found (`notFound()` is called). `shared/hooks/useTrackedPosts.js` is the client-side mirror used by create/delete flows to keep the cookie in sync after a mutation.
+**Ownership modeli:** xarici API-da istifadəçi konsepti olmadığı üçün "sənin postların" anlayışı tamamilə client-side simulyasiya olunur. Post yaradılanda onun id-si bir cookie-yə əlavə olunur (`pulse-owned-post-ids`, bax `shared/lib/tracked-posts.js`) və bu cookie həmin browser-ə aid postların yeganə qeydidir. `services/posts.server.js#getPosts`/`getPost` bu cookie-ni oxuyub filtrləyir/qoruyur — paylaşılan API-da mövcud olan, amma cookie-də olmayan post "tapılmadı" sayılır (`notFound()` çağırılır). `shared/hooks/useTrackedPosts.js` create/delete axınlarında cookie-ni sinxron saxlamaq üçün client-side güzgüdür.
 
-**Route/component split:** pages under `app/` (`app/page.jsx`, `app/posts/page.jsx`, `app/posts/[id]/page.jsx`, `app/posts/[id]/edit/page.jsx`, `app/create/page.jsx`) are server components exporting `dynamic = "force-dynamic"` and fetch via `services/posts.server.js`. All mutation UI is isolated into `"use client"` components/hooks under `features/posts/` (`PostForm`, `DeletePostButton`, `useSavePost`, `useDeletePost`), which call `services/posts.js` directly, sync the tracked-posts cookie via `useTrackedPosts` on success, and report errors back into local state (no global error/store).
+**Route/komponent bölgüsü:** `app/` altındakı səhifələr (`app/page.jsx`, `app/posts/page.jsx`, `app/posts/[id]/page.jsx`, `app/posts/[id]/edit/page.jsx`, `app/create/page.jsx`) server komponentlərdir, `dynamic = "force-dynamic"` ixrac edir və `services/posts.server.js` vasitəsilə data çəkir. Bütün mutasiya UI-si `features/posts/` altında `"use client"` komponent/hook-lara təcrid olunub (`PostForm`, `DeletePostButton`, `useSavePost`, `useDeletePost`) — bunlar `services/posts.js`-i birbaşa çağırır, uğur olduqda `useTrackedPosts` ilə tracked-posts cookie-sini sinxronlaşdırır və xətaları local state-ə qaytarır (qlobal error/store yoxdur). Post yaradılandan sonra istifadəçi detallar səhifəsinə yox, birbaşa home-a yönləndirilir.
 
-**Shared layer:** `shared/ui` holds the presentational kit (`Button`, `Modal`, `ConfirmModal`, `EmptyState`, `StatusPanel`, `Kicker`, `LoadingState`, `EditorialFormLayout`) used across both server and client components. `shared/providers` holds app-wide wrappers mounted in `app/layout.jsx`: `AppToaster` (sonner-based toasts, driven by `shared/lib/notifications.js`). Render errors are handled by Next's own `app/error.jsx`/`app/not-found.jsx` segment boundaries — there's no extra manual error-boundary component.
+**Modal-lar üçün vacib qeyd:** `shared/ui/Modal` `createPortal` ilə birbaşa `document.body`-yə render olunur. Səbəb: modal CSS `transform`-u olan bir ata elementin (məs. hover-də transform alan kart) daxilində render olunsaydı, `position: fixed` overlay viewport-a yox, o transformlu elementə görə mövqelənərdi — bu, "mouse kənara çıxanda modalın sıçraması" kimi bug-lara səbəb olurdu. Fixed-overlay tələb edən hər yeni komponent də portal ilə render olunmalıdır.
 
-Path alias: `@/*` maps to the project root (`jsconfig.json`).
+**Shared layer:** `shared/ui` server və client komponentlər arasında paylaşılan görünüş kitidir (`Button`, `Modal`, `ConfirmModal`, `EmptyState`, `StatusPanel`, `Kicker`, `LoadingState`, `EditorialFormLayout`). `shared/providers` `app/layout.jsx`-də quraşdırılan tətbiq-geniş wrapper-ləri saxlayır: `AppToaster` (sonner əsaslı toast-lar, `richColors` + `theme="dark"` ilə; `shared/lib/notifications.js`-dəki `notifySuccess`/`notifyError`/`notifyInfo` uyğun olaraq yaşıl/qırmızı/sarı rənglənir). Render xətaları Next-in öz `app/error.jsx`/`app/not-found.jsx` segment boundary-ləri ilə idarə olunur — əlavə manual error-boundary komponenti yoxdur.
+
+**Dizayn sistemi:** `styles/globals.css`-dəki CSS dəyişənləri (`--background`, `--foreground`, `--accent` və s.) tünd, minimal "premium SaaS" görünüşünü təyin edir (tək indigo aksent rəngi, saç tükü qədər nazik sərhədlər, yumşaq kölgələr — Linear/Vercel/Stripe tərzi). `app/layout.jsx`-dəki header `position: sticky` ilə yuxarıda qalır (tam opak fon, arxasında heç nə görünmür) və səhifənin sonunda brand/naviqasiya/status məlumatlı bir footer var; `body` flex-column + `.frame { flex: 1 }` ilə qısa səhifələrdə footer aşağıda "yapışıb" qalır.
+
+Path alias: `@/*` layihə kökünə (`jsconfig.json`) işarə edir.

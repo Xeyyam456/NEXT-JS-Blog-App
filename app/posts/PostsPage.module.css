@@ -1,27 +1,27 @@
 .shell {
   width: min(1180px, calc(100% - 2rem));
   margin: 0 auto;
-  padding: 1.5rem 0 4rem;
+  padding: 1rem 0 5rem;
 }
 
 .panel {
   border: 1px solid var(--line);
   background: var(--panel);
-  backdrop-filter: blur(18px);
   box-shadow: var(--shadow);
 }
 
 .contentSection {
-  border-radius: 32px;
-  padding: 1.5rem;
+  border-radius: var(--radius);
+  padding: 2rem;
 }
 
 .contentSection h1 {
-  margin: 0.8rem 0 0;
-  font-family: var(--font-display), serif;
-  line-height: 0.95;
-  letter-spacing: -0.03em;
-  font-size: clamp(2.4rem, 4.5vw, 4rem);
+  margin: 0.5rem 0 0;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-size: clamp(1.6rem, 2.8vw, 2.1rem);
 }
 
 .sectionHeadline {
@@ -34,14 +34,14 @@
 .sectionSummary {
   max-width: 34ch;
   color: var(--muted);
-  line-height: 1.75;
+  line-height: 1.7;
 }
 
 .postGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-  margin-top: 1.5rem;
+  gap: 1.25rem;
+  margin-top: 1.75rem;
 }
 
 @media (max-width: 980px) {
@@ -61,7 +61,6 @@
   }
 
   .contentSection {
-    padding: 1.1rem;
-    border-radius: 24px;
+    padding: 1.4rem;
   }
 }

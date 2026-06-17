@@ -1,13 +1,12 @@
 .shell {
   width: min(1180px, calc(100% - 2rem));
   margin: 0 auto;
-  padding: 1.5rem 0 4rem;
+  padding: 1rem 0 5rem;
 }
 
 .panel {
   border: 1px solid var(--line);
   background: var(--panel);
-  backdrop-filter: blur(18px);
   box-shadow: var(--shadow);
 }
 
@@ -20,71 +19,74 @@
 
 .heroStory,
 .contentSection {
-  border-radius: 32px;
+  border-radius: var(--radius);
 }
 
 .heroStory {
-  padding: 2rem;
+  padding: 3rem;
 }
 
 .heroCopy h1,
 .contentSection h2 {
   margin: 0;
-  font-family: var(--font-display), serif;
-  line-height: 0.95;
-  letter-spacing: -0.03em;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
 }
 
 .heroCopy h1 {
-  max-width: none;
-  font-size: clamp(3.2rem, 7vw, 6rem);
+  max-width: 36ch;
+  font-size: clamp(2.2rem, 4.6vw, 3.4rem);
 }
 
 .heroCopy p {
-  max-width: none;
-  margin: 1rem 0 0;
+  max-width: 52ch;
+  margin: 1.1rem 0 0;
   color: var(--muted);
-  line-height: 1.75;
+  font-size: 1.05rem;
+  line-height: 1.7;
 }
 
 .heroActions,
 .metricStrip {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.85rem;
+  gap: 0.75rem;
 }
 
 .heroActions {
-  margin-top: 2rem;
+  margin-top: 2.2rem;
 }
 
 .metricStrip {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
+  margin-top: 2.6rem;
+  padding-top: 1.6rem;
   border-top: 1px solid var(--line);
 }
 
 .metricStrip div {
   display: grid;
-  gap: 0.2rem;
+  gap: 0.25rem;
   min-width: 140px;
 }
 
 .metricStrip strong {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
+  font-weight: 600;
   color: var(--foreground);
 }
 
 .metricStrip span {
-  font-size: 0.82rem;
-  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--muted);
 }
 
 .contentSection {
   margin-top: 1rem;
-  padding: 1.5rem;
+  padding: 2rem;
 }
 
 .sectionHeadline {
@@ -95,21 +97,21 @@
 }
 
 .contentSection h2 {
-  margin-top: 0.8rem;
-  font-size: clamp(2.4rem, 4.5vw, 4rem);
+  margin-top: 0.5rem;
+  font-size: clamp(1.5rem, 2.6vw, 1.9rem);
 }
 
 .sectionSummary {
   max-width: 34ch;
   color: var(--muted);
-  line-height: 1.75;
+  line-height: 1.7;
 }
 
 .postGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-  margin-top: 1.5rem;
+  gap: 1.25rem;
+  margin-top: 1.75rem;
 }
 
 @media (max-width: 980px) {
@@ -130,8 +132,7 @@
 
   .heroStory,
   .contentSection {
-    padding: 1.1rem;
-    border-radius: 24px;
+    padding: 1.4rem;
   }
 
   .heroActions {

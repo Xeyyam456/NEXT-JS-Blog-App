@@ -1,43 +1,43 @@
 .root {
   width: min(1180px, calc(100% - 2rem));
   margin: 0 auto;
-  padding: 1.5rem 0 4rem;
+  padding: 1rem 0 5rem;
   isolation: isolate;
 }
 
 .layout {
   display: grid;
   grid-template-columns: minmax(260px, 0.85fr) minmax(0, 1.25fr);
-  gap: 1rem;
+  gap: 1.25rem;
   margin-top: 1rem;
-  padding: 1.5rem;
+  padding: 2rem;
   border: 1px solid var(--line);
-  border-radius: 32px;
+  border-radius: var(--radius);
   background: var(--panel);
-  backdrop-filter: blur(18px);
   box-shadow: var(--shadow);
 }
 
 .intro h1 {
-  margin: 0.8rem 0 0;
-  font-family: var(--font-display), serif;
-  font-size: clamp(2.4rem, 4.5vw, 4rem);
-  line-height: 0.95;
-  letter-spacing: -0.03em;
+  margin: 0.5rem 0 0;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 600;
+  font-size: clamp(1.7rem, 3.2vw, 2.3rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
 
 .intro p:last-child {
   max-width: 58ch;
   margin: 1rem 0 0;
   color: var(--muted);
-  line-height: 1.75;
+  line-height: 1.7;
 }
 
 .formShell {
-  padding: 1.25rem;
+  padding: 1.5rem;
   border: 1px solid var(--line);
-  border-radius: 32px;
-  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius);
+  background: var(--panel-strong);
 }
 
 .headline {
@@ -48,17 +48,19 @@
 }
 
 .headline h2 {
-  margin: 0.8rem 0 0;
-  font-family: var(--font-display), serif;
-  font-size: clamp(2.4rem, 4.5vw, 4rem);
-  line-height: 0.95;
-  letter-spacing: -0.03em;
+  margin: 0.5rem 0 0;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 600;
+  font-size: clamp(1.2rem, 2.2vw, 1.5rem);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--muted);
 }
 
 .summary {
   max-width: 34ch;
   color: var(--muted);
-  line-height: 1.75;
+  line-height: 1.7;
 }
 
 @media (max-width: 980px) {
@@ -78,7 +80,6 @@
 
   .layout,
   .formShell {
-    padding: 1.1rem;
-    border-radius: 24px;
+    padding: 1.2rem;
   }
 }
