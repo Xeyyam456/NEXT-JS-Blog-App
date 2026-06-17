@@ -49,13 +49,13 @@ export default function DeletePostButton({
         description="This action permanently removes the post from the live API and cannot be undone."
         cancelLabel="Keep Story"
         confirmLabel={isDeleting ? "Deleting..." : "Confirm Delete"}
-        confirmButtonClassName="danger-button"
+        confirmVariant="danger"
         isPending={isDeleting}
         onConfirm={handleConfirmDelete}
       />
 
       {showInlineError && error ? (
-        <p className={`feedback error-text ${styles.error}`}>{error}</p>
+        <p className={styles.error}>{error}</p>
       ) : null}
     </div>
   );

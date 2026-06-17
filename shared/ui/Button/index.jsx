@@ -1,14 +1,15 @@
 import Link from "next/link";
+import styles from "./Button.module.css";
 
 const VARIANT_CLASS_NAMES = {
-  primary: "primary-button",
-  secondary: "secondary-button",
-  danger: "danger-button",
+  primary: styles.primary,
+  secondary: styles.secondary,
+  danger: styles.danger,
 };
 
 const SIZE_CLASS_NAMES = {
-  small: "small-button",
-  xsmall: "xsmall-button",
+  small: styles.small,
+  xsmall: styles.xsmall,
 };
 
 export default function Button({
@@ -21,7 +22,7 @@ export default function Button({
 }) {
   const variantClassName = VARIANT_CLASS_NAMES[variant] || VARIANT_CLASS_NAMES.primary;
   const sizeClassName = size ? SIZE_CLASS_NAMES[size] : "";
-  const mergedClassName = [variantClassName, sizeClassName, className]
+  const mergedClassName = [styles.button, styles.fullWidthMobile, variantClassName, sizeClassName, className]
     .filter(Boolean)
     .join(" ");
 

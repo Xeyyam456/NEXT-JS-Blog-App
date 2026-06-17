@@ -35,7 +35,7 @@
 }
 
 @media (max-width: 640px) {
-  .actions :global(a) {
+  .actions > * {
     width: 100%;
   }
 }

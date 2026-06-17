@@ -1,6 +1,6 @@
 import Image from "next/image";
 import DeletePostButton from "../DeletePostButton";
-import { Button } from "@/shared/ui";
+import { Button, Kicker } from "@/shared/ui";
 import styles from "./PostCard.module.css";
 
 export default function PostCard({ post }) {
@@ -22,8 +22,8 @@ export default function PostCard({ post }) {
       ) : null}
 
       <div className={styles.topline}>
-        <span className="section-chip muted-chip">Post #{visibleId}</span>
-        <span className="reading-time">Live entry</span>
+        <Kicker tone="muted">Post #{visibleId}</Kicker>
+        <span className={styles.readingTime}>Live entry</span>
       </div>
 
       <div className={styles.content}>

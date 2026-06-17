@@ -46,8 +46,17 @@
 .content p {
   display: -webkit-box;
   overflow: hidden;
+  color: var(--muted);
+  line-height: 1.75;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
+}
+
+.readingTime {
+  color: var(--muted);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .actions {
@@ -63,9 +72,7 @@
     flex-direction: column;
   }
 
-  .actions :global(.primary-button),
-  .actions :global(.secondary-button),
-  .actions :global(.danger-button) {
+  .actions > * {
     width: 100%;
   }
 }

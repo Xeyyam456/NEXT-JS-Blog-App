@@ -1,7 +1,8 @@
 import Image from "next/image";
 import { DeletePostButton } from "@/features/posts/components";
 import { getPost } from "@/services/server-posts";
-import Link from "next/link";
+import { Button, Kicker } from "@/shared/ui";
+import styles from "./PostDetailPage.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -28,38 +29,38 @@ export default async function PostDetailPage({ params }) {
   const visibleId = post.displayId ?? post.id;
 
   return (
-    <main className="page-shell">
-      <article className="detail-layout panel-surface">
-        <div className="detail-column">
-          <p className="section-kicker">Post #{visibleId}</p>
+    <main className={styles.shell}>
+      <article className={styles.layout}>
+        <div className={styles.column}>
+          <Kicker>Post #{visibleId}</Kicker>
           <h1>{post.title}</h1>
           {post.imageUrl ? (
-            <div className="detail-cover-media">
+            <div className={styles.coverMedia}>
               <Image
                 src={post.imageUrl}
                 alt={post.title}
                 fill
                 unoptimized
                 sizes="(max-width: 980px) 100vw, 66vw"
-                className="detail-cover-image"
+                className={styles.coverImage}
               />
             </div>
           ) : null}
-          <p className="detail-body">{post.body}</p>
+          <p className={styles.body}>{post.body}</p>
         </div>
 
-        <aside className="detail-sidebar">
+        <aside className={styles.sidebar}>
           <div>
-            <p className="sidebar-label">Endpoint</p>
+            <p className={styles.sidebarLabel}>Endpoint</p>
             <p>GET /posts/{post.id}</p>
           </div>
 
           <div>
-            <p className="sidebar-label">Actions</p>
-            <div className="detail-actions">
-              <Link href={`/posts/${post.id}/edit`} className="primary-button">
+            <p className={styles.sidebarLabel}>Actions</p>
+            <div className={styles.actions}>
+              <Button href={`/posts/${post.id}/edit`}>
                 Edit Story
-              </Link>
+              </Button>
               <DeletePostButton postId={post.id} />
             </div>
           </div>

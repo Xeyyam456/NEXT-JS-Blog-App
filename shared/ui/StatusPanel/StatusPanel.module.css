@@ -1,17 +1,35 @@
 .root {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 1.5rem 0 4rem;
   isolation: isolate;
 }
 
 .panel {
+  display: grid;
+  gap: 0.9rem;
   align-items: flex-start;
+  margin-top: 1rem;
+  padding: 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: 32px;
+  background: var(--panel);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--shadow);
 }
 
 .title {
   margin: 0.8rem 0 0;
+  font-family: var(--font-display), serif;
+  font-size: clamp(2.4rem, 4.5vw, 4rem);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
 }
 
 .description {
   max-width: 52ch;
+  color: var(--muted);
+  line-height: 1.75;
 }
 
 .actions {
@@ -22,12 +40,21 @@
 }
 
 @media (max-width: 640px) {
+  .root {
+    width: min(100% - 1rem, 1180px);
+  }
+
+  .panel {
+    padding: 1.1rem;
+    border-radius: 24px;
+  }
+
   .actions {
     width: 100%;
     flex-direction: column;
   }
 
-  .actions :global(.primary-button) {
+  .actions > * {
     width: 100%;
   }
 }

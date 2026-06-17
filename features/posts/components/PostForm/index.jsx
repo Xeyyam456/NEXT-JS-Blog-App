@@ -78,7 +78,7 @@ export default function PostForm({ mode, post }) {
         </label>
       </div>
 
-      {error ? <p className={`feedback error-text ${styles.error}`}>{error}</p> : null}
+      {error ? <p className={styles.error}>{error}</p> : null}
 
       <div className={styles.actions}>
         <Button type="submit" variant="primary" disabled={isSubmitting}>

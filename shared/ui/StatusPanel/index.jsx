@@ -1,4 +1,5 @@
-import Link from "next/link";
+import Button from "../Button";
+import Kicker from "../Kicker";
 import styles from "./StatusPanel.module.css";
 
 export default function StatusPanel({
@@ -10,24 +11,24 @@ export default function StatusPanel({
   onAction,
 }) {
   return (
-    <main className={`page-shell ${styles.root}`}>
-      <section className={`content-section panel-surface error-panel ${styles.panel}`}>
-        <p className="section-kicker">{kicker}</p>
+    <main className={styles.root}>
+      <section className={styles.panel}>
+        <Kicker>{kicker}</Kicker>
         <h1 className={styles.title}>{title}</h1>
         <p className={styles.description}>{description}</p>
 
         {(actionHref || onAction) ? (
           <div className={styles.actions}>
             {actionHref ? (
-              <Link href={actionHref} className="primary-button">
+              <Button href={actionHref}>
                 {actionLabel}
-              </Link>
+              </Button>
             ) : null}
 
             {onAction ? (
-              <button type="button" onClick={onAction} className="primary-button">
+              <Button type="button" onClick={onAction}>
                 {actionLabel}
-              </button>
+              </Button>
             ) : null}
           </div>
         ) : null}

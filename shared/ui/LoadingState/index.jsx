@@ -1,3 +1,4 @@
+import Kicker from "../Kicker";
 import styles from "./LoadingState.module.css";
 
 export default function LoadingState({
@@ -7,17 +8,17 @@ export default function LoadingState({
   skeletonCount = 4,
 }) {
   return (
-    <main className="page-shell">
-      <section className={`content-section panel-surface ${styles.panel}`}>
+    <main className={styles.shell}>
+      <section className={styles.panel}>
         <div className={styles.header}>
-          <p className="section-kicker">{kicker}</p>
+          <Kicker>{kicker}</Kicker>
           <h1 className={styles.title}>{title}</h1>
           {description ? <p className={styles.description}>{description}</p> : null}
         </div>
 
-        <div className="skeleton-grid" aria-hidden="true">
+        <div className={styles.skeletonGrid} aria-hidden="true">
           {Array.from({ length: skeletonCount }).map((_, index) => (
-            <div key={index} className="skeleton-card" />
+            <div key={index} className={styles.skeletonCard} />
           ))}
         </div>
       </section>

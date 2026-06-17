@@ -1,4 +1,5 @@
-import Link from "next/link";
+import Button from "../Button";
+import Kicker from "../Kicker";
 import styles from "./EmptyState.module.css";
 
 export default function EmptyState({
@@ -10,7 +11,7 @@ export default function EmptyState({
 }) {
   return (
     <div className={styles.root}>
-      <p className="section-kicker">{kicker}</p>
+      <Kicker>{kicker}</Kicker>
       <div className={styles.copy}>
         <h3 className={styles.title}>{title}</h3>
         {description ? <p className={styles.description}>{description}</p> : null}
@@ -18,9 +19,9 @@ export default function EmptyState({
 
       {actionHref && actionLabel ? (
         <div className={styles.actions}>
-          <Link href={actionHref} className="primary-button">
+          <Button href={actionHref}>
             {actionLabel}
-          </Link>
+          </Button>
         </div>
       ) : null}
     </div>

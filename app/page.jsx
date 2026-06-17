@@ -1,7 +1,7 @@
 import { PostCard } from "@/features/posts/components";
 import { getPosts } from "@/services/server-posts";
-import { EmptyState } from "@/shared/ui";
-import Link from "next/link";
+import { Button, EmptyState, Kicker } from "@/shared/ui";
+import styles from "./HomePage.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -9,11 +9,11 @@ export default async function HomePage() {
   const posts = await getPosts();
 
   return (
-    <main className="page-shell">
-      <section className="hero-grid hero-grid-wide">
-        <article className="hero-story panel-surface">
-          <div className="hero-copy">
-            <span className="section-chip">Live API Journal</span>
+    <main className={styles.shell}>
+      <section className={styles.heroGrid}>
+        <article className={`${styles.heroStory} ${styles.panel}`}>
+          <div className={styles.heroCopy}>
+            <Kicker>Live API Journal</Kicker>
             <h1>Write, refine, and publish stories with a real server-rendered workflow.</h1>
             <p>
               The listing and detail screens render on the server, while create,
@@ -21,16 +21,16 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <div className="hero-actions">
-            <Link href="/create" className="primary-button">
+          <div className={styles.heroActions}>
+            <Button href="/create">
               Write New Post
-            </Link>
-            <Link href="/posts" className="secondary-button">
+            </Button>
+            <Button href="/posts" variant="secondary">
               Browse Archive
-            </Link>
+            </Button>
           </div>
 
-          <div className="metric-strip">
+          <div className={styles.metricStrip}>
             <div>
               <strong>{posts.length}</strong>
               <span>Live posts</span>
@@ -47,13 +47,13 @@ export default async function HomePage() {
         </article>
       </section>
 
-      <section className="content-section panel-surface">
-        <div className="section-headline">
+      <section className={`${styles.contentSection} ${styles.panel}`}>
+        <div className={styles.sectionHeadline}>
           <div>
-            <p className="section-kicker">Fresh from the API</p>
+            <Kicker>Fresh from the API</Kicker>
             <h2>Server-rendered stories</h2>
           </div>
-          <p className="section-summary">
+          <p className={styles.sectionSummary}>
             Editorial card layout with direct access to detail and edit routes.
           </p>
         </div>
@@ -67,7 +67,7 @@ export default async function HomePage() {
             actionHref="/create"
           />
         ) : (
-          <div className="post-grid">
+          <div className={styles.postGrid}>
             {posts.map((post) => (
               <PostCard key={post.id} post={post} />
             ))}

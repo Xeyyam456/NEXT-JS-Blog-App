@@ -1,3 +1,4 @@
+import Kicker from "../Kicker";
 import styles from "./EditorialFormLayout.module.css";
 
 export default function EditorialFormLayout({
@@ -9,10 +10,10 @@ export default function EditorialFormLayout({
   children,
 }) {
   return (
-    <main className={`page-shell ${styles.root}`}>
-      <section className={`panel-surface ${styles.layout}`}>
+    <main className={styles.root}>
+      <section className={styles.layout}>
         <div className={styles.intro}>
-          <p className="section-kicker">{introKicker}</p>
+          <Kicker>{introKicker}</Kicker>
           <h1>{title}</h1>
           <p>{description}</p>
         </div>
@@ -20,7 +21,7 @@ export default function EditorialFormLayout({
         <div className={styles.formShell}>
           <div className={styles.headline}>
             <div>
-              <p className="section-kicker">Endpoint</p>
+              <Kicker>Endpoint</Kicker>
               <h2>{endpoint}</h2>
             </div>
             <p className={styles.summary}>{endpointSummary}</p>

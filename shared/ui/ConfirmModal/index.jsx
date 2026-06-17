@@ -10,7 +10,7 @@ export default function ConfirmModal({
   description,
   confirmLabel = "Confirm",
   cancelLabel = "Cancel",
-  confirmButtonClassName = "primary-button",
+  confirmVariant = "primary",
   isPending = false,
   onConfirm,
   onClose,
@@ -34,7 +34,7 @@ export default function ConfirmModal({
           </Button>
           <Button
             type="button"
-            className={confirmButtonClassName}
+            variant={confirmVariant}
             onClick={onConfirm}
             disabled={isPending}
           >

@@ -1,6 +1,7 @@
 "use client";
 
 import { useModalLifecycle } from "@/shared/hooks";
+import Kicker from "../Kicker";
 import styles from "./Modal.module.css";
 
 export default function Modal({
@@ -20,7 +21,7 @@ export default function Modal({
   return (
     <div className={styles.overlay} role="presentation" onClick={onClose}>
       <div
-        className={`panel-surface ${styles.panel}`}
+        className={styles.panel}
         role="dialog"
         aria-modal="true"
         aria-labelledby="shared-modal-title"
@@ -32,7 +33,7 @@ export default function Modal({
 
         <div className={styles.header}>
           <div className={styles.headingGroup}>
-            <p className={`section-kicker ${styles.kicker}`}>Dialog</p>
+            <Kicker className={styles.kicker}>Dialog</Kicker>
             <h2 id="shared-modal-title" className={styles.title}>{title}</h2>
           </div>
           <button
