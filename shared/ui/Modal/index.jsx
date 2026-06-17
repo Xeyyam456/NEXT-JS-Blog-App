@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import { useModalLifecycle } from "@/shared/hooks";
 import Kicker from "../Kicker";
 import styles from "./Modal.module.css";
@@ -12,6 +13,8 @@ export default function Modal({
   children,
   footer,
 }) {
+  const titleId = useId();
+
   useModalLifecycle({ isOpen, onClose });
 
   if (!isOpen) {
@@ -24,7 +27,7 @@ export default function Modal({
         className={styles.panel}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="shared-modal-title"
+        aria-labelledby={titleId}
         onClick={(event) => event.stopPropagation()}
       >
         <div className={styles.orbPrimary} />
@@ -34,7 +37,7 @@ export default function Modal({
         <div className={styles.header}>
           <div className={styles.headingGroup}>
             <Kicker className={styles.kicker}>Dialog</Kicker>
-            <h2 id="shared-modal-title" className={styles.title}>{title}</h2>
+            <h2 id={titleId} className={styles.title}>{title}</h2>
           </div>
           <button
             type="button"

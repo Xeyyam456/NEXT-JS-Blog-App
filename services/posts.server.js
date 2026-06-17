@@ -19,15 +19,9 @@ export async function getPosts() {
 
   const posts = await Promise.all(
     trackedPostIds.map(async (postId) => {
-      try {
-        return await readPost(postId);
-      } catch (error) {
-        if (error.status === 404) {
-          return null;
-        }
+      const result = await readPost(postId);
 
-        throw error;
-      }
+      return result.result ? result.data : null;
     })
   );
 
@@ -42,19 +36,15 @@ export async function getPost(id) {
     notFound();
   }
 
-  try {
-    const post = await readPost(id);
+  const result = await readPost(id);
 
-    if (!post) {
+  if (!result.result) {
+    if (result.status === 404) {
       notFound();
     }
 
-    return post;
-  } catch (error) {
-    if (error.status === 404) {
-      notFound();
-    }
-
-    throw error;
+    throw new Error("Unable to load post.");
   }
+
+  return result.data;
 }

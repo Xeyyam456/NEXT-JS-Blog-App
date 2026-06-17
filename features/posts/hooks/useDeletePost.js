@@ -19,12 +19,12 @@ export default function useDeletePost(postId) {
     try {
       const result = await deletePost(postId);
 
-      if (!result.ok) {
-        throw result.error;
+      if (!result.result) {
+        throw new Error(result.data?.message || "Unable to delete the post.");
       }
 
       untrackPost(postId);
-      notifySuccess("Post deleted", result.message);
+      notifySuccess("Post deleted", "Post deleted successfully.");
       router.push("/");
       router.refresh();
       return result;

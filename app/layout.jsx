@@ -1,5 +1,5 @@
 import "../styles/globals.css";
-import { AppErrorBoundary, AppToaster } from "@/shared/providers";
+import { AppToaster } from "@/shared/providers";
 import Link from "next/link";
 import styles from "./layout.module.css";
 
@@ -21,13 +21,12 @@ export default function RootLayout({ children }) {
             </Link>
 
             <nav className={styles.nav}>
-              <Link href="/">Home</Link>
               <Link href="/posts">Posts</Link>
               <Link href="/create">Create</Link>
             </nav>
           </header>
 
-          <AppErrorBoundary>{children}</AppErrorBoundary>
+          {children}
         </div>
         <AppToaster />
       </body>

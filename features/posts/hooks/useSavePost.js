@@ -23,8 +23,8 @@ export default function useSavePost({ mode, postId }) {
         ? await updatePost(postId, formData)
         : await createPost(formData);
 
-      if (!result.ok) {
-        throw result.error;
+      if (!result.result) {
+        throw new Error(result.data?.message || "Unable to save the post.");
       }
 
       const savedPost = result.data;
@@ -35,10 +35,10 @@ export default function useSavePost({ mode, postId }) {
 
       notifySuccess(
         isEditMode ? "Post updated" : "Post published",
-        result.message
+        isEditMode ? "Post updated successfully." : "Post published successfully."
       );
 
-      router.push(isEditMode ? "/" : `/posts/${savedPost.id}`);
+      router.push("/");
       router.refresh();
       return result;
     } catch (requestError) {

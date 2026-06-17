@@ -1,5 +1,5 @@
 import { PostCard } from "@/features/posts/components";
-import { getPosts } from "@/services/server-posts";
+import { getPosts } from "@/services/posts.server";
 import { Button, EmptyState, Kicker } from "@/shared/ui";
 import styles from "./HomePage.module.css";
 

@@ -1,5 +1,5 @@
 import { PostForm } from "@/features/posts/components";
-import { getPost } from "@/services/server-posts";
+import { getPost } from "@/services/posts.server";
 import { EditorialFormLayout } from "@/shared/ui";
 
 export const dynamic = "force-dynamic";

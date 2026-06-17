@@ -32,16 +32,18 @@ export default function PostCard({ post }) {
       </div>
 
       <div className={styles.actions}>
-        <Button href={`/posts/${post.id}`} variant="primary" size="xsmall">
-          Open Story
-        </Button>
-        <Button
-          href={`/posts/${post.id}/edit`}
-          variant="secondary"
-          size="xsmall"
-        >
-          Edit
-        </Button>
+        <div className={styles.primaryActions}>
+          <Button href={`/posts/${post.id}`} variant="primary" size="xsmall">
+            Open Story
+          </Button>
+          <Button
+            href={`/posts/${post.id}/edit`}
+            variant="secondary"
+            size="xsmall"
+          >
+            Edit
+          </Button>
+        </div>
         <DeletePostButton
           postId={post.id}
           buttonLabel="Remove"

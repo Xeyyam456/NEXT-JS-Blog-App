@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { DeletePostButton } from "@/features/posts/components";
-import { getPost } from "@/services/server-posts";
+import { getPost } from "@/services/posts.server";
 import { Button, Kicker } from "@/shared/ui";
 import styles from "./PostDetailPage.module.css";
 
