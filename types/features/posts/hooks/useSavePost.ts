@@ -1,9 +1,10 @@
 import type { ApiResult, PostId } from "@/types/api";
-import type { Post, PostFormData } from "@/types/post";
+import type { Post, PostFormData, PostFormMode } from "@/types/post";
 
-export type UseSavePostParams =
-  | { mode: "edit"; postId: PostId }
-  | { mode: "create"; postId?: PostId };
+export type UseSavePostParams = {
+  mode: PostFormMode;
+  postId?: PostId;
+};
 
 export type UseSavePostReturn = {
   error: string;

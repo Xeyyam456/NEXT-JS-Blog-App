@@ -21,9 +21,7 @@ export default function PostForm(props: PostFormProps) {
     body: post?.body || EMPTY_FORM.body,
     imageUrl: post?.imageUrl || EMPTY_FORM.imageUrl,
   });
-  const { error, isEditMode, isSubmitting, savePost } = useSavePost(
-    props.mode === "edit" ? { mode: "edit", postId: props.post.id } : { mode: "create" }
-  );
+  const { error, isEditMode, isSubmitting, savePost } = useSavePost({ mode, postId: post?.id });
 
   function handleChange(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const { name, value } = event.target;

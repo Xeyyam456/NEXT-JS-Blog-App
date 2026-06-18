@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Bu fayl Claude Code-a (claude.ai/code) bu repo üzərində işləyərkən bələdçilik etmək üçündür.
+Bu fayl Claude Code-a (claude.ai/code) bu repo üzərində işləyərkən bələdçilik etmək üçündür. Kodun hər sətrinin sadə dildə, başlanğıc səviyyəsində izahı üçün `KODLARIN-IZAHI.md`-yə bax (CSS xaric, bütün `.ts`/`.tsx` faylları sətir-sətir izah olunur).
 
 @AGENTS.md
 
@@ -17,12 +17,12 @@ Bu repoda test suite/framework konfiqurasiya olunmayıb.
 
 Bu "Pulse Press" adlı, Next.js App Router əsaslı blog CRUD tətbiqidir. Layihənin **öz database-i və auth-u yoxdur** — bütün post datası paylaşılan, xarici (üçüncü tərəf) bir API-da saxlanılır.
 
-- `services/http.ts` — tək axios instansı, `baseURL` `https://blog-api-t6u0.onrender.com/posts`-a yönəlib (bu repo-nun nəzarət etmədiyi, bütün istifadəçilər tərəfindən paylaşılan üçüncü tərəf API).
+- `services/http.ts` — tək axios instansı, `baseURL` `NEXT_PUBLIC_API_BASE_URL` env dəyişənindən oxunur (bax `.env.example`; default qiymət `https://blog-api-t6u0.onrender.com/posts`, bu repo-nun nəzarət etmədiyi, bütün istifadəçilər tərəfindən paylaşılan üçüncü tərəf API). Client-side mutasiyalardan da çağırıldığı üçün dəyişən `NEXT_PUBLIC_` prefiksi ilə işarələnib.
 - `services/request-handlers.ts` — `successHandler(response)` / `errorHandler(error)` istənilən axios cavabını/xətasını `{ data, status, result }` formasına salır (`result` boolean-dır, tiplər `types/api.ts`-dəki `ApiSuccess`/`ApiFailure`/`ApiResult`-dır).
 - `services/posts.ts` — API-ya qarşı CRUD funksiyaları (`readPost`, `createPost`, `updatePost`, `deletePost`), yuxarıdakı handler-lərin üzərində qurulub. Hər funksiya HƏMİŞƏ `ApiResult<Post>` (və ya `ApiResult<null>`) qaytarır (heç vaxt throw etmir) — çağıran tərəf `result.result`-a görə qərar verir. `normalizePost` hər funksiyanın data-sına `id`-ni güzgüləyən `displayId` sahəsi əlavə edir.
 - `services/posts.server.ts` — yalnız server tərəfdə işləyir (`next/headers`-dən `cookies()` istifadə edir); bütün səhifələr oxuma üçün bunu import edir, `services/posts.ts`-i birbaşa YOX.
 
-**Ownership modeli:** xarici API-da istifadəçi konsepti olmadığı üçün "sənin postların" anlayışı tamamilə client-side simulyasiya olunur. Post yaradılanda onun id-si bir cookie-yə əlavə olunur (`pulse-owned-post-ids`, bax `shared/lib/tracked-posts.ts`) və bu cookie həmin browser-ə aid postların yeganə qeydidir. `services/posts.server.ts#getPosts`/`getPost` bu cookie-ni oxuyub filtrləyir/qoruyur — paylaşılan API-da mövcud olan, amma cookie-də olmayan post "tapılmadı" sayılır (`notFound()` çağırılır). `shared/hooks/useTrackedPosts.ts` create/delete axınlarında cookie-ni sinxron saxlamaq üçün client-side güzgüdür.
+**Ownership modeli:** xarici API-da istifadəçi konsepti olmadığı üçün "sənin postların" anlayışı tamamilə client-side simulyasiya olunur. Post yaradılanda onun id-si bir cookie-yə əlavə olunur (`pulse-owned-post-ids`, bax `shared/lib/tracked-posts.ts`) və bu cookie həmin browser-ə aid postların yeganə qeydidir. `services/posts.server.ts#getPosts`/`getPost` bu cookie-ni oxuyub filtrləyir/qoruyur — paylaşılan API-da mövcud olan, amma cookie-də olmayan post "tapılmadı" sayılır (`notFound()` çağırılır). `shared/hooks/useTrackedPosts.ts` create/delete axınlarında cookie-ni sinxron saxlamaq üçün client-side güzgüdür. API-da created-at sahəsi olmadığı üçün cookie-dəki ID sırası (yeni ID-lər sona əlavə olunur) xronologiyanın yeganə mənbəyidir — `getPosts` bunu newest-first feed üçün tərsinə çevirir.
 
 **Route/komponent bölgüsü:** `app/` altındakı səhifələr (`app/page.tsx`, `app/posts/page.tsx`, `app/posts/[id]/page.tsx`, `app/posts/[id]/edit/page.tsx`, `app/create/page.tsx`) server komponentlərdir, `dynamic = "force-dynamic"` ixrac edir və `services/posts.server.ts` vasitəsilə data çəkir. Bütün mutasiya UI-si `features/posts/` altında `"use client"` komponent/hook-lara təcrid olunub (`PostForm`, `DeletePostButton`, `useSavePost`, `useDeletePost`) — bunlar `services/posts.ts`-i birbaşa çağırır, uğur olduqda `useTrackedPosts` ilə tracked-posts cookie-sini sinxronlaşdırır və xətaları local state-ə qaytarır (qlobal error/store yoxdur). Post yaradılandan sonra istifadəçi detallar səhifəsinə yox, birbaşa home-a yönləndirilir.
 
@@ -40,7 +40,7 @@ Layihə tam TypeScript-ə keçirilib (`.ts`/`.tsx`). Tip strategiyası: **bütü
 - Komponent/hook/səhifə faylı öz tipini həmişə `@/types/...` path alias-ı ilə import edir (məs. `import type { ButtonProps } from "@/types/shared/ui/Button"`), heç vaxt nisbi `./X.types` yolu ilə YOX.
 - `types/post.ts` və `types/api.ts` — `types/` kökündə qalan domain tipləri (`Post`, `PostFormData`, `ApiResult`, `PostId` və s.), çünki bunlar tək bir modulun deyil, bütöv layihənin paylaşılan domain konseptidir.
 - Yeni komponent/hook/səhifə əlavə edəndə: əvvəlcə `types/` altında mənbə yoluna uyğun fayl yarat, sonra mənbə faylından `@/types/...` ilə import et. Heç vaxt tipi mənbə faylının içinə yazma və heç vaxt mənbə qovluğunda colocated `*.types.ts` yaratma.
-- `useSavePost`-da `mode`/`postId` discriminated union (`{ mode: "edit"; postId: PostId } | { mode: "create"; postId?: PostId }`) kimi modelləşdirilib — narrowing düzgün işləməsi üçün destructure etmədən `params.mode`/`props.mode` üzərindən yoxlanılır (TS discriminated union-u destructure edəndə korrelyasiyanı itirir).
+- `useSavePost` və `PostForm` sadə flat tip istifadə edir (`{ mode: PostFormMode; postId?: PostId }` / `{ mode: PostFormMode; post?: Post }`) — discriminated union deyil, oxunaqlılıq üçün qəsdən sadələşdirilib. `mode === "edit"` olduqda `postId`/`post`-un mövcud olması runtime-da `PostForm` çağıran tərəfin məsuliyyətidir, TS bunu məcburi etmir.
 - `next.config.ts`, `tsconfig.json` (`@/*` → kök, əvvəlki `jsconfig.json`-un əvəzinə) və `next-env.d.ts` (auto-generated, git-ə commit olunmur) standart Next.js TS quraşdırılmasıdır.
 
 Path alias: `@/*` layihə kökünə (`tsconfig.json`) işarə edir.

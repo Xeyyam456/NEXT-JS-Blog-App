@@ -2,7 +2,7 @@
 
 Bu fayl layihədəki **hər bir kod faylının** nə üçün var olduğunu, nə işlədiyini, hansı digər fayllara qoşulduğunu və data-nın (həm dəyərin, həm də onun **tipinin**) haradan haraya hərəkət etdiyini izah edir. Məqsəd budur ki, kodu hər oxuyan adam (hətta yeni başlayan, hətta TypeScript-i ilk dəfə görən) bu faylı oxuyub layihəni tam başa düşsün.
 
-> Qeyd: Layihə əvvəlcə sadə JavaScript (`.js`/`.jsx`) idi, sonra **bütünlüklə TypeScript-ə** (`.ts`/`.tsx`) keçirildi. Bu sənəd hazırkı (TypeScript) vəziyyəti izah edir. Köhnə sənəd versiyası `.js`/`.jsx` fayl adlarına istinad edirdi — bu, indi köhnəlmişdir, çünki bütün fayllar `.ts`/`.tsx`-dir.
+> Qeyd: CSS faylları burada sətir-sətir izah olunmur (bax bölmə 10) — yalnız `.ts`/`.tsx` (əsl kod məntiqi) sətir-sətir izah olunur, çünki dəyər/tip axını yalnız oradadır.
 
 ---
 
@@ -62,6 +62,9 @@ const nextConfig: NextConfig = {};
 export default nextConfig;
 ```
 `import type { NextConfig }` — bu, **yalnız tip** importudur (runtime-da heç bir kod gətirmir, sadəcə "bu obyektin şəkli belə olmalıdır" deyir). Hazırda obyekt boşdur (`{}`) — heç bir xüsusi parametr yoxdur, sadəcə Next.js-in default davranışı işləyir. Amma indi, məsələn, `experimental: {...}` kimi bir parametr əlavə etsən, TypeScript səhv yazılmış açar adını (`typo`) dərhal qırmızı xətt ilə göstərəcək — bu, sadə `.js` faylda mümkün deyildi.
+
+### `.env.example` və `.env.local`
+İkisi də tək bir sətirdən ibarətdir: `NEXT_PUBLIC_API_BASE_URL=https://blog-api-t6u0.onrender.com/posts`. Fərq: `.env.example` git-ə yüklənir (sadəcə **nümunə**, real dəyəri başqası da görə bilər, burada məxfi heç nə yoxdur), `.env.local` isə `.gitignore`-dadır (hər kompüterdə fərqli ola bilər deyə, prinsipcə şəxsi sayılır). Layihəni yeni açan adam `cp .env.example .env.local` etməlidir (bax `README.md`). Bu dəyər `services/http.ts`-də `process.env.NEXT_PUBLIC_API_BASE_URL` ilə oxunur — ətraflı izah bölmə 3-də.
 
 ### `eslint.config.mjs`
 Kod yazarkən səhv/səliqəsizlik axtaran "ESLint" alətinin qaydalarını təyin edir (`npm run lint` bu faylı oxuyur). `eslint-config-next/core-web-vitals` həm JavaScript, həm TypeScript fayllarını avtomatik tanıyıb müvafiq qaydaları tətbiq edir. `.next`, `out`, `build`, `next-env.d.ts` qovluqlarını/faylını yoxlamadan kənarda saxlayır.
@@ -169,33 +172,48 @@ export type PostFormMode = "create" | "edit";
 | `types/features/posts/components/DeletePostButton.ts` | `DeletePostButtonProps` | `features/posts/components/DeletePostButton/index.tsx` |
 | `types/features/posts/components/PostCard.ts` | `PostCardProps` | `features/posts/components/PostCard/index.tsx` |
 | `types/features/posts/components/PostForm.ts` | `PostFormProps` | `features/posts/components/PostForm/index.tsx` |
+| `types/features/posts/hooks/usePostSearch.ts` | `UsePostSearchReturn` | `features/posts/hooks/usePostSearch.ts` |
+| `types/features/posts/components/PostsGrid.ts` | `PostsGridProps` | `features/posts/components/PostsGrid/index.tsx` |
 | `types/app/layout.ts` | `RootLayoutProps` | `app/layout.tsx` |
 | `types/app/error.ts` | `ErrorPageProps` | `app/error.tsx` |
 | `types/app/posts/[id]/page.ts` | `PostDetailPageProps` | `app/posts/[id]/page.tsx` |
 | `types/app/posts/[id]/edit/page.ts` | `EditPostPageProps` | `app/posts/[id]/edit/page.tsx` |
 
-Hər birinin **konkret nə üçün belə yazıldığı** aşağıda, müvafiq mənbə faylının izahında ətraflı göstərilir (məs. `PostForm`/`useSavePost`-un "discriminated union" tipləri xüsusi diqqət tələb edir).
+Hər birinin **konkret nə üçün belə yazıldığı** aşağıda, müvafiq mənbə faylının izahında ətraflı göstərilir.
 
-### Ən maraqlı tip qərarı: `useSavePost` üçün discriminated union
+**İstisna: `shared/hooks/useDebounce.ts`-in tip faylı yoxdur.** Bu hook `(value: T, delayMs: number) => T` formasındadır — heç bir "obyekt şəkli" (props kimi) qəbul etmir, sadəcə iki sadə (generic) parametr alır. Güzgüləmə qaydası "bu komponentin/hook-un **prop obyektinin** şəkli haradadır" sualına cavab vermək üçündür; burada belə bir obyekt yoxdur ki, ayrıca tipə çıxarılsın, ona görə generic funksiya imzası birbaşa `useDebounce.ts`-in öz daxilində yazılıb.
 
+### Bilərəkdən seçilmiş sadə tip: `useSavePost`, `PostForm`, `Button`
+
+Bu üç yerdə əvvəlcə daha "ağıllı" tiplər (discriminated union — "ayırıcı sahəyə görə birləşmə") yazılmışdı, sonra **bilərəkdən sadələşdirildi**, çünki layihə sahibi oxunaqlılığı tip-təhlükəsizlikdən üstün tutdu. Bunu görmək öyrədicidir, ona görə hər iki versiyanı göstərək.
+
+**`useSavePost` üçün indi (sadə, flat) versiya:**
 ```ts
 // types/features/posts/hooks/useSavePost.ts
+export type UseSavePostParams = {
+  mode: PostFormMode;
+  postId?: PostId;
+};
+```
+Bu, "həm `mode`, həm `postId` (ola bilər, olmaya da bilər) olan sadə bir obyekt" deyir. **Diqqət:** bu tip özlüyündə "edit rejimində `postId` mütləq olmalıdır" qaydasını **məcbur etmir** — bunu indi insan (kodu yazan) yadda saxlamalıdır, TypeScript yox. Bunun əvəzində kodda belə yazılıb (`features/posts/hooks/useSavePost.ts`):
+```ts
+const result = isEditMode
+  ? await updatePost(params.postId!, formData)
+  : await createPost(formData);
+```
+`params.postId!` — sonundaki **`!`** işarəsi "non-null assertion" adlanır, mənası: "bilirəm ki, bu, `undefined` ola bilər kimi görünür, amma mən səndən (TypeScript-dən) xahiş edirəm, mənə inan, bura çatanda bu mütləq mövcud olacaq, xəbərdarlıq vermə". Bu, məsuliyyəti tip sistemindən insanın öz nəzarətinə keçirir — daha sadə kod, amma bir az daha az "avtomatik qoruma".
+
+**Əvvəlki (daha "ağıllı") versiya belə idi, müqayisə üçün:**
+```ts
 export type UseSavePostParams =
   | { mode: "edit"; postId: PostId }
   | { mode: "create"; postId?: PostId };
 ```
+Bu versiyada TypeScript **özü** bilirdi ki, `mode === "edit"` yazılan qolda `postId` mütləq mövcuddur (`!` yazmağa ehtiyac qalmırdı) — bu, "type narrowing" (tipin dəqiqləşdirilməsi) adlanır. Amma bunun bir "tələsi" var idi: əgər `const { mode, postId } = params;` kimi əvvəlcədən **destructure** (parçalama) etsəydin, TypeScript bu əlaqəni itirirdi — `params.mode`/`params.postId` (obyektin özü üzərindən, parçalamadan) yazmaq **məcburi** idi. Bu incəlik adi gözlə görünmür və yeni başlayan üçün çətin başa düşülür — məhz buna görə layihə sahibi bunu sadələşdirməyi seçdi.
 
-Bu, sadə `{ mode: PostFormMode; postId?: PostId }` yazmaqdan **bilərəkdən** fərqlidir. Niyə? Çünki real qaydamız belədir: **"edit" rejimində `postId` mütləq olmalıdır, "create" rejimində ola bilər, ola bilməz də.** Əgər tək bir "yumşaq" tip yazsaydıq (`postId?: PostId`), TypeScript "edit" rejimində belə `postId`-nin `undefined` ola biləcəyini düşünər və bizi hər yerdə əlavə yoxlama yazmağa məcbur edərdi (və ya əksinə, səhvən `undefined`-ı API-ya göndərməyimizə icazə verərdi).
+Eyni dəyişiklik **`PostForm`**-da da edilib (aşağıda, bölmə 8-də) və **`Button`**-da da (aşağıda, bölmə 6-da) — hər ikisi əvvəllər union idi, indi flat (sadə, vahid) tipdir.
 
-İki variantlı union (`{ mode: "edit"; postId: PostId } | { mode: "create"; postId?: PostId }`) ilə TypeScript **"edit" yazılan yerdə `postId`-nin mütləq olduğunu**, "create" yazılan yerdə isə **ola bilməyəcəyini** bilir. Bu, `features/posts/hooks/useSavePost.ts`-də belə işlədilir:
-
-```ts
-const result = params.mode === "edit"
-  ? await updatePost(params.postId, formData)   // burada params.postId həmişə PostId-dir, undefined ola bilməz
-  : await createPost(formData);
-```
-
-**Çox vacib TypeScript "tələ"si:** Əgər `const { mode, postId } = params;` yazıb sonra `if (mode === "edit") { updatePost(postId, ...) }` yazsaydıq, TypeScript-in **destructure edilmiş** (parçalanmış) dəyişənlər arasındaki əlaqəni izləmə qabiliyyəti yoxdur — `postId` hələ də `PostId | undefined` kimi qalardı və xəta verərdi. Ona görə bu kodda **bilərəkdən** `params.mode`/`params.postId` (obyektin özü üzərindən, destructure etmədən) işlədilib — bu, "narrowing" (tipin dəqiqləşdirilməsi) düzgün işləməsi üçün şərtdir. Eyni naxış `features/posts/components/PostForm/index.tsx`-də `props.mode === "edit" ? props.post.id : ...` şəklində də var.
+**Nəticə (qayda kimi yadda saxla):** Bu layihədə **defolt seçim** sadə, flat tip yazmaqdır. Yalnız əgər TypeScript-in özü konkret bir səhvin qarşısını real şəkildə alırsa (sadəcə nəzəri ehtimal yox), union/discriminated-union kimi mürəkkəb tiplərə əl atılır.
 
 ---
 
@@ -208,14 +226,20 @@ Bu qovluqdakı fayllar **yalnız** xarici API-ya sorğu göndərmək və cavabı
 import axios from "axios";
 
 const http = axios.create({
-  baseURL: "https://blog-api-t6u0.onrender.com/posts",
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   headers: { "Content-Type": "application/json" },
   timeout: 15000,
 });
 
 export default http;
 ```
-Bu, "axios" kitabxanasından hazırlanmış tək bir HTTP müştəri (client) obyektidir. `baseURL` sayəsində hər sorğuda tam ünvanı yazmaq lazım deyil — `http.get("/5")` yazsan, əslində `https://blog-api-t6u0.onrender.com/posts/5`-ə sorğu gedir. `timeout: 15000` — 15 saniyə ərzində cavab gəlməsə, sorğu avtomatik xəta ilə kəsilir (proqram əbədi "gözləmədə" qalmasın deyə). Bütün digər `services/` faylları bu obyekti idxal edib (`import http from "./http"`) istifadə edir. Yəni API ünvanı dəyişəndə **yalnız bu fayl** dəyişdirilir. Bu faylda ayrıca tip lazım deyil — axios öz tiplərini özü gətirir (`AxiosInstance`).
+Bu, "axios" kitabxanasından hazırlanmış tək bir HTTP müştəri (client) obyektidir. `baseURL` sayəsində hər sorğuda tam ünvanı yazmaq lazım deyil — `http.get("/5")` yazsan, əslində `baseURL + "/5"`-ə sorğu gedir.
+
+`process.env.NEXT_PUBLIC_API_BASE_URL` — ünvan kodun içində **yazılmır**, layihə kökündəki `.env.local` faylından oxunur (həmin faylda `NEXT_PUBLIC_API_BASE_URL=https://blog-api-t6u0.onrender.com/posts` yazılıb). `process.env.X` — "X adlı mühit dəyişənini oxu" deməkdir. Niyə kodun içinə yazmırıq? Çünki ünvan dəyişəndə (məs. başqa bir API-a keçəndə, və ya kompüterdən-kompüterə fərqli ünvan istəsən) kodu dəyişdirmədən, sadəcə `.env.local`-i dəyişdirmək kifayət edir — bu, "12-factor" adlanan, konfiqurasiyanı koddan ayırma prinsipidir. `NEXT_PUBLIC_` prefiksi **məcburidir**: Next.js-də normal mühit dəyişənləri yalnız serverdə oxuna bilir, amma bu fayl həm serverdə (`services/posts.server.ts` üzərindən), həm də brauzerdə (`features/posts/hooks/useSavePost.ts`, `useDeletePost.ts` birbaşa çağırır) işlədiyi üçün, dəyişən brauzerə də "görünməlidir" — `NEXT_PUBLIC_` prefiksi məhz bunu təmin edir.
+
+`.env.local` `.gitignore`-dadır (git-ə yüklənmir, çünki mühitə görə fərqli ola bilər), amma `.env.example` faylı (eyni dəyərlə) git-ə yüklənib — yeni kompüterdə layihəni açan adam `cp .env.example .env.local` edib işə başlaya bilər (bax `README.md`).
+
+`timeout: 15000` — 15 saniyə ərzində cavab gəlməsə, sorğu avtomatik xəta ilə kəsilir (proqram əbədi "gözləmədə" qalmasın deyə). Bütün digər `services/` faylları bu obyekti idxal edib (`import http from "./http"`) istifadə edir. Bu faylda ayrıca tip lazım deyil — axios öz tiplərini özü gətirir (`AxiosInstance`).
 
 ### `services/request-handlers.ts`
 ```ts
@@ -293,7 +317,8 @@ export async function getPosts(): Promise<Post[]> {
   const trackedPostIds = await getTrackedPostIds();
   const posts: Post[] = [];
 
-  for (const postId of trackedPostIds) {
+  // Tracked IDs are stored oldest-first (new IDs are appended), so reverse for a newest-first feed.
+  for (const postId of [...trackedPostIds].reverse()) {
     const result = await readPost(postId);
     if (result.result) {
       posts.push(result.data);
@@ -304,6 +329,8 @@ export async function getPosts(): Promise<Post[]> {
 }
 ```
 Sadə dillə: "əvvəlcə cookie-dəki ID-ləri al, sonra hər ID üçün API-dan o postu oxu, uğurlu alınanları bir siyahıya yığ, siyahını qaytar". `if (result.result)` yoxlamasından **sonra**, TypeScript artıq bilir ki, `result` `ApiSuccess<Post>`-dur, ona görə `result.data` heç bir əlavə yoxlama tələb etmədən `Post` kimi `posts.push(...)`-a verilə bilir — bu, "type narrowing"in əməli faydasıdır. Əgər hansısa post API-dan silinibsə (məs. başqa yolla), o sadəcə siyahıya əlavə olunmur, proqram çökmür.
+
+**`[...trackedPostIds].reverse()` nə üçündür?** API-da postun "nə vaxt yaradıldığı" sahəsi (tarix) yoxdur. Amma `shared/lib/tracked-posts.ts`-dəki `addTrackedPostId` funksiyası yeni ID-ni həmişə siyahının **sonuna** əlavə edir — deməli cookie-dəki sıra, sənin postları yaratdığın sıra ilə **eynidir** (köhnədən yeniyə). `[...trackedPostIds]` əvvəlcə bu siyahının bir **kopyasını** çıxarır (`...` — "spread", əsl siyahıya toxunmadan eynisini yeni bir massivə köçürür), sonra `.reverse()` onu tərsinə çevirir. Nəticədə **ən yeni yaradılan post birinci** göstərilir — adi bloq kimi. Kopya çıxarmaq vacibdir, çünki `.reverse()` JavaScript-də massivi **özü** dəyişdirir (in-place) — kopya olmasa, `trackedPostIds`-in özü də tərsinə dönərdi, bu da başqa yerdə (məs. `getPost`-da) gözlənilməz nəticəyə səbəb ola bilərdi.
 
 ```ts
 export async function getPost(id: PostId): Promise<Post> {
@@ -444,9 +471,38 @@ export default function useTrackedPosts(): UseTrackedPostsReturn {
 ```
 `useState(() => readTrackedPostIdsFromBrowser())` — funksiya formasında başlanğıc dəyər vermək, TypeScript-ə `trackedPostIds`-in tipini `number[]` kimi **çıxarmasına** (infer) imkan verir, əl ilə `useState<number[]>(...)` yazmağa ehtiyac qalmır. Niyə iki yerdə yenilənir (`trackPostInBrowser` **və** `setTrackedPostIds`)? Çünki cookie brauzer yaddaşıdır (səhifə yenilənəndə də qalır), `trackedPostIds` state-i isə yalnız bu komponentin ekranda "canlı" görünüşü üçündür. İkisini sinxron saxlamaq lazımdır. Bu hook `useSavePost` (post yaradılanda `trackPost`) və `useDeletePost`-da (post silinəndə `untrackPost`) çağırılır.
 
+### `shared/hooks/useDebounce.ts`
+"Debounce" — bir dəyər **tez-tez** dəyişəndə, hər dəyişiklikdə deyil, yalnız "bir az sakitlik" olandan sonra reaksiya vermək deməkdir. Məsələn axtarış qutusuna yazanda, hər hərfdə deyil, yazı dayanandan 500 millisaniyə sonra axtarış etmək istəyirik (yoxsa hər hərfdə lazımsız iş görülər).
+```ts
+"use client";
+
+import { useEffect, useState } from "react";
+
+export default function useDebounce<T>(value: T, delayMs: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => setDebouncedValue(value), delayMs);
+
+    return () => clearTimeout(timeoutId);
+  }, [value, delayMs]);
+
+  return debouncedValue;
+}
+```
+- `<T>` — bu hook **generic**-dir, istənilən tipdə dəyərlə işləyə bilər (mətn, rəqəm, obyekt...). `useDebounce<string>("salam", 500)` çağırılsa, `T` avtomatik `string` kimi tutulur.
+- `useState(value)` — "gecikdirilmiş" (debounced) dəyəri öz state-ində saxlayır, başlanğıcda əsl dəyərlə eynidir.
+- `useEffect(..., [value, delayMs])` — `value` (məs. axtarış qutusunun hər hərfdə dəyişən dəyəri) **hər dəyişdikdə** bu effekt yenidən işə düşür.
+- `setTimeout(() => setDebouncedValue(value), delayMs)` — "`delayMs` (məs. 500) millisaniyə sonra, `debouncedValue`-nu yenilə" — bir **gözləmə taymeri** qurur.
+- `return () => clearTimeout(timeoutId);` — bu, `useEffect`-in **təmizləmə (cleanup)** funksiyasıdır. Niyə vacibdir? Çünki istifadəçi yazmaqda davam edirsə, `value` təkrar-təkrar dəyişir, hər dəyişiklikdə **köhnə** taymer ləğv edilir (`clearTimeout`) və **yeni** bir taymer qurulur. Yalnız istifadəçi 500ms ərzində heç nə yazmasa, son taymer "yetişir" və `debouncedValue` yenilənir. Bu sayədə `debouncedValue` yalnız "yazı dayanandan sonra" dəyişir, hər hərfdə yox.
+- Hook `debouncedValue`-nu qaytarır — çağıran kod (`usePostSearch`, aşağıda bölmə 8-də) bu **gecikdirilmiş** dəyərə əsasən filtr edir, ani (hər hərfdəki) dəyərə yox.
+
+Bu hookun ayrıca tip faylı olmadığını yuxarıda (bölmə 2-də) izah etmişdik — generic funksiya imzası `(value: T, delayMs: number) => T` heç bir "obyekt şəkli" daşımır.
+
 ### `shared/hooks/index.ts`
 Sadəcə "barrel file" — yəni bu qovluqdaki hook-ları bir yerdən idxal etməyə imkan verir:
 ```ts
+export { default as useDebounce } from "./useDebounce";
 export { default as useDisclosure } from "./useDisclosure";
 export { default as useModalLifecycle } from "./useModalLifecycle";
 export { default as useTrackedPosts } from "./useTrackedPosts";
@@ -460,24 +516,19 @@ Bu sayədə başqa fayllarda `import { useDisclosure } from "@/shared/hooks"` ya
 Bu qovluqdakı komponentlərin heç biri "post" sözünü bilmir — onlar tamamilə ümumi, istənilən layihədə işlənə bilən "tikinti hissələri"dir (Button, Modal və s.).
 
 ### `shared/ui/Button/index.tsx`
-Ən tipə-qəliz (amma ən öyrədici) komponentdir, çünki **iki rolda** işləyir: ya `<a>` linki, ya da `<button>`. Tipi (`types/shared/ui/Button.ts`):
+**İki rolda** işləyir: ya `<a>` linki, ya da `<button>` — `href` versən link, verməsən button olur. Tipi (`types/shared/ui/Button.ts`):
 ```ts
-type ButtonOwnProps = {
+export type ButtonProps = {
+  href?: string;
   variant?: "primary" | "secondary" | "danger";
   size?: "small" | "xsmall";
   className?: string;
   children?: ReactNode;
-};
-
-type ButtonAsLink = ButtonOwnProps &
-  Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href"> & { href: string };
-
-type ButtonAsButton = ButtonOwnProps &
-  ButtonHTMLAttributes<HTMLButtonElement> & { href?: undefined };
-
-export type ButtonProps = ButtonAsLink | ButtonAsButton;
+} & Omit<AnchorHTMLAttributes<HTMLAnchorElement> & ButtonHTMLAttributes<HTMLButtonElement>, "href">;
 ```
-Bu, real həyatdaki qaydanı **dəqiq** modelləşdirir: "əgər `href` versən, bu bir link kimi davranır və bütün `<a>` atributlarını (target, rel və s.) qəbul edir; `href` verməsən, bu bir `<button>`-dur və bütün `<button>` atributlarını (onClick, disabled, type və s.) qəbul edir". `AnchorHTMLAttributes<HTMLAnchorElement>` və `ButtonHTMLAttributes<HTMLButtonElement>` — React-in özünün hazır DOM atribut tipləridir, hər HTML elementin **bütün mümkün** atributlarını siyahıya alır. `Omit<..., "href">` — "bu tipin hər şeyini götür, amma `href`-i çıxar" (çünki `href`-i özümüz aşağıda `string` kimi məcburi elan edirik, ikiqat təzad olmasın).
+Sadə dillə: "bu obyektdə öz sahələrimiz (`href`, `variant`, `size`, `className`, `children`) var, **və əlavə olaraq** (`&` — intersection, "kəsişmə" işarəsi) bir `<a>`-nın **və** bir `<button>`-un bütün mümkün atributları (`onClick`, `disabled`, `type`, `target`, `rel`...) da ola bilər". `AnchorHTMLAttributes<HTMLAnchorElement>` və `ButtonHTMLAttributes<HTMLButtonElement>` — React-in özünün hazır DOM atribut tipləridir. `Omit<..., "href">` — "bu birləşmiş tipin hər şeyini götür, amma `href`-i çıxar" (çünki `href`-i özümüz yuxarıda artıq, `string`-dən fərqli olaraq **optional** (`?`) şəkildə elan etmişik).
+
+Bu, əvvəlki versiyadan **bilərəkdən sadələşdirilib** (əvvəlki versiya `ButtonAsLink | ButtonAsButton` adlı iki ayrı discriminated union qolu idi — "əgər `href` versən, mütləq `<a>` atributları, verməsən, mütləq `<button>` atributları" qaydasını TypeScript səviyyəsində **məcbur edirdi**). İndiki flat (vahid) versiya bunu məcbur etmir — nəzəri olaraq `href` ilə yanaşı `type="submit"` (button-a aid bir atribut) da yazıla bilər, TypeScript bunu indi qadağan etmir. Amma komponentin öz daxili məntiqi (`if (href) { ...link... } else { ...button... }`) real DOM-da hansının işlədiyini düzgün seçdiyi üçün, praktikada problem yaratmır — sadəcə "səhv yazılışı compile vaxtı tutmaq" qarantiyası bir az azalıb, əvəzində tip daha qısa və oxunaqlıdır.
 
 Komponentin daxilində:
 ```ts
@@ -567,7 +618,7 @@ Barrel file — `export { default as AppToaster } from "./AppToaster";`.
 `shared/` qovluğundan fərqli olaraq, bura "post" sözünü bilən kod yığılır.
 
 ### `features/posts/hooks/useSavePost.ts`
-"Create" və "Edit" formalarının **hər ikisinin** istifadə etdiyi hook. Parametri yuxarıda izah edilən discriminated union-dur (`UseSavePostParams`):
+"Create" və "Edit" formalarının **hər ikisinin** istifadə etdiyi hook. Parametri yuxarıda (bölmə 2-də) izah edilən sadə, flat tipdir (`UseSavePostParams`):
 ```ts
 export default function useSavePost(params: UseSavePostParams): UseSavePostReturn {
   const isEditMode = params.mode === "edit";
@@ -575,8 +626,8 @@ export default function useSavePost(params: UseSavePostParams): UseSavePostRetur
   async function savePost(formData: PostFormData) {
     setError(""); setIsSubmitting(true);
     try {
-      const result = params.mode === "edit"
-        ? await updatePost(params.postId, formData)
+      const result = isEditMode
+        ? await updatePost(params.postId!, formData)
         : await createPost(formData);
 
       if (!result.result) {
@@ -604,7 +655,7 @@ export default function useSavePost(params: UseSavePostParams): UseSavePostRetur
 }
 ```
 Addım-addım data axını:
-1. **`params.mode === "edit" ? ... : ...`** — `params` (obyektin özü, destructure edilmədən) üzərindən yoxlanılır ki, TypeScript "edit" qolunda `params.postId`-nin mütləq mövcud olduğunu bilsin (yuxarıdaki "Ən maraqlı tip qərarı" bölməsinə bax).
+1. **`isEditMode ? ... : ...`** — `params.mode === "edit"` nəticəsi əvvəlcədən `isEditMode` dəyişəninə yazılıb, sonra hər yerdə bu istifadə olunur. `updatePost(params.postId!, ...)`-dəki `!` işarəsi "bu mütləq mövcuddur, inan mənə" deyir — çünki tip artıq `postId`-ni "ola bilər, olmaya da bilər" elan edib (bax bölmə 2, "Bilərəkdən seçilmiş sadə tip").
 2. `isEditMode`-a görə `services/posts.ts`-dəki `updatePost` və ya `createPost` çağırılır.
 3. Cavab `result.result === false`-dursa, əl ilə bir `Error` yaradılıb "atılır" (`throw`) — bunu elə bu funksiyanın öz `catch` bloku tutur. (Diqqət: `services/posts.ts` heç vaxt throw etmir, amma bu hook nəticəni yoxlayıb **özü** throw edir ki, aşağıdaki bir `catch` bloku ilə bütün xəta hallarını **tək yerdə** idarə etsin.)
 4. `catch (requestError)` blokunda `requestError`-un tipi `unknown`-dur (yenə "useUnknownInCatchVariables" qaydası) — ona görə `requestError instanceof Error` ilə əvvəlcə yoxlanılır, yalnız bundan sonra `.message`-ə icazə verilir.
@@ -614,20 +665,109 @@ Addım-addım data axını:
 ### `features/posts/hooks/useDeletePost.ts`
 Eyni naxış, sadəcə silmə üçün: `deletePost(postId: PostId)` çağırır (`postId` birbaşa funksiyanın parametridir, discriminated union-a ehtiyac yoxdur, çünki silmənin "rejimi" yoxdur), uğur olsa `untrackPost` ilə cookie-dən ID-ni çıxarır, `router.push("/")` edir. Qaytarış tipi `UseDeletePostReturn` → `{ error: string; isDeleting: boolean; handleDelete: () => Promise<ApiResult<null> | null> }` (`null` qayıdır, əgər xəta olsa, çünki bu halda `catch` bloku `return null` edir).
 
+### `features/posts/hooks/usePostSearch.ts`
+`/posts` səhifəsindəki axtarış qutusunun məntiqi. `shared/hooks/useDebounce.ts`-i istifadə edir:
+```ts
+"use client";
+
+import { useMemo, useState } from "react";
+import { useDebounce } from "@/shared/hooks";
+import type { Post } from "@/types/post";
+import type { UsePostSearchReturn } from "@/types/features/posts/hooks/usePostSearch";
+
+export default function usePostSearch(posts: Post[]): UsePostSearchReturn {
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  const filteredPosts = useMemo(() => {
+    const normalizedTerm = debouncedSearchTerm.trim().toLowerCase();
+
+    if (!normalizedTerm) {
+      return posts;
+    }
+
+    return posts.filter((post) => post.title.toLowerCase().includes(normalizedTerm));
+  }, [posts, debouncedSearchTerm]);
+
+  return { searchTerm, setSearchTerm, filteredPosts };
+}
+```
+Tipi (`UsePostSearchReturn`, `types/features/posts/hooks/usePostSearch.ts`): `{ searchTerm: string; setSearchTerm: (value: string) => void; filteredPosts: Post[] }`.
+
+- `posts: Post[]` — hook parametr kimi **bütün** postların siyahısını alır (bu artıq serverdə `getPosts()` ilə çəkilib, hooka hazır gəlir).
+- `searchTerm` — istifadəçinin **bu an** yazdığı mətn, hər hərfdə dəyişir (`<input>`-un `onChange`-i birbaşa bunu yeniləyir).
+- `debouncedSearchTerm = useDebounce(searchTerm, 500)` — yuxarıda izah olunan hookdan istifadə edərək, "istifadəçi 500ms ərzində heç nə yazmasa" dəyişən bir versiya əldə edir.
+- `useMemo(() => {...}, [posts, debouncedSearchTerm])` — `useMemo` React-in **yaddaşda saxlama (memoization)** hookudur: "bu hesablamanı yalnız `posts` və ya `debouncedSearchTerm` dəyişəndə yenidən et, başqa hallarda **köhnə nəticəni** istifadə et" deyir. Niyə lazımdır? Çünki `PostsGrid` hər render olunanda (məs. başqa bir state dəyişəndə) bu filtri **təkrar-təkrar** hesablamaq lazımsızdır — `useMemo` performans üçün təkrarın qarşısını alır.
+- Filtr məntiqi: `debouncedSearchTerm.trim().toLowerCase()` — başda/sonda boşluqları silir, kiçik hərfə salır (`"Salam"` ilə `"salam"` eyni nəticə versin deyə). Boşdursa (`!normalizedTerm`), **bütün** postlar qaytarılır (axtarış yoxdur deməkdir). Doludursa, `posts.filter(...)` ilə yalnız **başlığında** bu mətn olan postlar saxlanılır (`.includes(normalizedTerm)`).
+- Hook `{ searchTerm, setSearchTerm, filteredPosts }` qaytarır — `searchTerm`/`setSearchTerm` `<input>`-u idarə etmək üçün, `filteredPosts` isə ekranda göstəriləcək **son** siyahıdır.
+
+### `features/posts/components/PostsGrid/index.tsx`
+`/posts` səhifəsindəki axtarış qutusu + nəticə sayı + kartların grid-ini birləşdirən **client komponent**. Bunun client component olması məcburidir, çünki `<input onChange>` kimi interaktivlik tələb edir — `app/posts/page.tsx`-in özü server component olduğu üçün bunu birbaşa edə bilməz, ona görə bu hissə ayrıca, kiçik bir client komponentə "təcrid" olunub.
+```tsx
+"use client";
+
+import PostCard from "../PostCard";
+import { usePostSearch } from "@/features/posts/hooks";
+import { EmptyState } from "@/shared/ui";
+import styles from "./PostsGrid.module.css";
+import type { PostsGridProps } from "@/types/features/posts/components/PostsGrid";
+
+export default function PostsGrid({ posts }: PostsGridProps) {
+  const { searchTerm, setSearchTerm, filteredPosts } = usePostSearch(posts);
+
+  return (
+    <>
+      <input
+        type="search"
+        value={searchTerm}
+        onChange={(event) => setSearchTerm(event.target.value)}
+        placeholder="Search by title..."
+        className={styles.search}
+        aria-label="Search posts by title"
+      />
+
+      <p className={styles.resultCount}>
+        {filteredPosts.length} {filteredPosts.length === 1 ? "result" : "results"} found
+      </p>
+
+      {filteredPosts.length === 0 ? (
+        <EmptyState
+          kicker="No matches"
+          title="No posts match your search"
+          description="Try a different title, or clear the search to see your full archive."
+        />
+      ) : (
+        <div className={styles.postGrid}>
+          {filteredPosts.map((post) => (
+            <PostCard key={post.id} post={post} />
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+```
+- Tipi (`PostsGridProps`): `{ posts: Post[] }` — komponent yalnız "bütün postlar" siyahısını alır, axtarışın özü `usePostSearch` hooku daxilində idarə olunur (komponent özü axtarış **məntiqini** bilmir, sadəcə hookun nəticəsini göstərir — "məntiqi hookda saxla, komponenti sadə saxla" prinsipi).
+- `value={searchTerm}` + `onChange={(event) => setSearchTerm(event.target.value)}` — bu, React-də **"controlled input"** (idarə olunan input) adlanır: input-un göstərdiyi mətn həmişə React state-indən (`searchTerm`) gəlir, istifadəçi yazanda `onChange` state-i yeniləyir, dəyişiklik isə dərhal ekranda görünür. `event.target.value` — brauzerin verdiyi hadisə (event) obyektindən, input-un **indiki** mətnini çıxarır.
+- `aria-label="Search posts by title"` — ekran oxuyucusu (görmə qüsuru olan istifadəçilər üçün proqram) bu input-un nə üçün olduğunu bilsin deyə (əlçatımlılıq/accessibility), çünki bu inputun yanında görünən bir `<label>` mətni yoxdur.
+- Nəticə sayı sətri (`{filteredPosts.length} ... found`) — `===1 ? "result" : "results"` ilə tək/cəm fərqini düzgün yazır (1 nəticə üçün "1 result", 2+ üçün "2 results").
+- `filteredPosts.length === 0` olduqda axtarışa uyğun **xüsusi** bir boş-vəziyyət mesajı göstərilir ("No posts match your search") — bu, "ümumiyyətlə heç postun olmaması" mesajından fərqlidir (o, `app/posts/page.tsx`-də, `posts.length === 0` yoxlamasında göstərilir).
+
 ### `features/posts/hooks/index.ts`
-Barrel file: `useSavePost` və `useDeletePost`-u bir yerdən ixrac edir.
+Barrel file: `useSavePost`, `useDeletePost` və `usePostSearch`-u bir yerdən ixrac edir.
 
 ### `features/posts/components/PostCard/index.tsx`
 Ana səhifədə və `/posts` səhifəsində hər bir post üçün göstərilən kartdır. Tipi sadədir: `{ post: Post }`. `post` obyektini prop kimi alır, şəkil (varsa), başlıq, qısa məzmun (CSS ilə 3 sətirdən sonra "..." edilir) və 3 düymə göstərir: "Open Story" (detal səhifəsinə link), "Edit" (redaktə səhifəsinə link), və `DeletePostButton` komponenti. `post.imageUrl ? (...) : null` — `imageUrl` `Post` tipində `optional` (`?`) olduğu üçün, TypeScript bu yoxlamanı (şərti render-i) demək olar **məcburi** kimi tələb edir, çünki `imageUrl`-i yoxlamadan birbaşa `<Image src={post.imageUrl}>` yazsan, `imageUrl`-in `undefined` ola biləcəyini bildiyi üçün TypeScript xəbərdarlıq verər.
 
 ### `features/posts/components/PostForm/index.tsx`
-Həm "Create", həm "Edit" səhifəsində işlədilən forma. Tipi (`PostFormProps`) discriminated union-dur:
+Həm "Create", həm "Edit" səhifəsində işlədilən forma. Tipi (`PostFormProps`) sadə, flat bir tipdir (əvvəllər discriminated union idi, bax bölmə 2, "Bilərəkdən seçilmiş sadə tip"):
 ```ts
-export type PostFormProps =
-  | { mode: "create"; post?: undefined }
-  | { mode: "edit"; post: Post };
+export type PostFormProps = {
+  mode: PostFormMode;
+  post?: Post;
+};
 ```
-Bu, "create" rejimində `post` prop-unun **verilməməsini**, "edit" rejimində isə **mütləq verilməsini** məcbur edir — `<PostForm mode="edit" />` (post-suz) yazsan, TypeScript bunu compile vaxtı tutar.
+Diqqət: bu tip **özlüyündə** "edit rejimində `post` mütləq verilməlidir" qaydasını məcbur etmir (`post` həmişə optional-dır, `mode` nə olursa olsun). Bu qaydaya əməl etmək indi insanın öhdəsindədir — `app/posts/[id]/edit/page.tsx` həmişə `<PostForm mode="edit" post={post} />` yazır, `app/create/page.tsx` isə `<PostForm mode="create" />` (post-suz).
 
 ```ts
 export default function PostForm(props: PostFormProps) {
@@ -636,11 +776,9 @@ export default function PostForm(props: PostFormProps) {
     title: post?.title || EMPTY_FORM.title,
     ...
   });
-  const { error, isEditMode, isSubmitting, savePost } = useSavePost(
-    props.mode === "edit" ? { mode: "edit", postId: props.post.id } : { mode: "create" }
-  );
+  const { error, isEditMode, isSubmitting, savePost } = useSavePost({ mode, postId: post?.id });
 ```
-Diqqət: `post?.title` yazılışı (optional chaining) — "`post` mövcuddursa onun `title`-ını al, yoxdursa `undefined` qaytar" deməkdir, bu, `post`-un destructure edildiyi yerdə belə düzgün işləyir (çünki sadəcə "oxuma", narrowing tələb etmir). Amma `useSavePost`-a verilən obyekt **yenidən `props.mode`/`props.post` üzərindən** (destructure edilmiş `mode`/`post` yox) yoxlanılır — bu, yenə "narrowing-i itirməmək" üçündür (yuxarıdaki "Ən maraqlı tip qərarı" bölməsinə bax).
+`post?.title` yazılışı (optional chaining) — "`post` mövcuddursa onun `title`-ını al, yoxdursa `undefined` qaytar" deməkdir. `useSavePost({ mode, postId: post?.id })` — `post?.id` da eyni şəkildə: `post` varsa onun `id`-si, yoxdursa `undefined` ötürülür. Tip flat olduğu üçün, bu sətirdə artıq əvvəlki versiyadaki kimi `props.mode`/`props.post` (destructure-suz) yazmağa **ehtiyac yoxdur** — sadə destructure edilmiş `mode`/`post` dəyişənləri birbaşa işlədilə bilər, çünki narrowing-dən asılı bir şərt qalmayıb.
 
 ```ts
 function handleChange(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
@@ -674,7 +812,7 @@ async function handleConfirmDelete() {
 Düyməyə basanda `open()` çağırılır → `ConfirmModal` görünür → "Confirm Delete"ə basanda `handleConfirmDelete` işə düşür → bu da `useDeletePost`-dakı əsl `handleDelete`-i çağırır. `result` `ApiResult<null> | null` tipindədir; `if (result)` yoxlaması burada sadəcə "`null` deyilmi" yoxlamasıdır (uğursuzluqda `handleDelete` `null` qaytarır). Modalı bağlamaq istəyəndə (`onClose`), əgər silmə **hələ davam edirsə** (`isDeleting`), heç nə olmur (bağlanmır) — bu, yarımçıq qalan sorğunun qarşısını alır.
 
 ### `features/posts/components/index.ts`
-Barrel file: `PostCard`, `PostForm`, `DeletePostButton`-u bir yerdən ixrac edir.
+Barrel file: `PostCard`, `PostForm`, `DeletePostButton`, `PostsGrid`-i bir yerdən ixrac edir.
 
 ---
 
@@ -703,7 +841,16 @@ export default async function HomePage() {
 Bu, bir **server komponentidir** (funksiya `async`-dır, və heç bir `"use client"` yoxdur). `dynamic = "force-dynamic"` Next.js-ə deyir ki, "bu səhifəni əvvəlcədən tikib saxlama (cache etmə), **hər sorğuda yenidən render et**" — çünki postlar dəyişə bilər, köhnəlmiş versiya göstərmək istəmirik. `getPosts()` `services/posts.server.ts`-dən gəlir, qaytardığı `Post[]`-u TypeScript artıq bilir, ona görə `posts.map((post) => <PostCard key={post.id} post={post} />)` yazılanda `post.id`, `post.title` və s. avtomatik tanınır, səhv sahə adı yazsan dərhal xəta görünür.
 
 ### `app/posts/page.tsx` (URL: `/posts`)
-Ana səhifəyə bənzəyir, sadəcə hero bölməsi yoxdur — bütün postların sadə bir siyahısıdır ("Full Archive"). Bu səhifə üçün ayrıca props tipi lazım deyil (heç bir parametr almır), ona görə `types/` qovluğunda qarşılığı yoxdur.
+Ana səhifəyə bənzəyir, sadəcə hero bölməsi yoxdur — bütün postların siyahısıdır ("Full Archive"). Bu səhifə üçün ayrıca props tipi lazım deyil (heç bir parametr almır), ona görə `types/` qovluğunda qarşılığı yoxdur.
+
+```tsx
+{posts.length === 0 ? (
+  <EmptyState ... />
+) : (
+  <PostsGrid posts={posts} />
+)}
+```
+Diqqət: `app/page.tsx` (ana səhifə) postları **birbaşa** `posts.map((post) => <PostCard ... />)` ilə göstərir, amma `/posts` səhifəsi onun əvəzinə `<PostsGrid posts={posts} />` çağırır (bölmə 8-də izah olunan, axtarış qutusu + nəticə sayı + grid-i özündə birləşdirən client komponent). Niyə fərqli? Çünki axtarış funksiyası yalnız "Full Archive" (tam arxiv) səhifəsində mənalıdır — ana səhifə daha "vitrin" rolundadır, sadəcə bir neçə postu göstərir, ona görə axtarışa ehtiyac yoxdur.
 
 ### `app/posts/[id]/page.tsx` (URL: `/posts/5` kimi)
 `[id]` qovluq adı — **dinamik route** deməkdir, `id` yerinə istənilən qiymət ola bilər. Tipi (`PostDetailPageProps`, `types/app/posts/[id]/page.ts`-də):
@@ -733,10 +880,10 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
 `generateMetadata` Next.js-in xüsusi funksiyasıdır — brauzer tab-ının başlığını (`<title>`) təyin edir, qaytarış tipi `Promise<Metadata>`-dır. Səhifənin əsas məzmunundan **əvvəl** çağırılır. `getPost(id)` cookie-də olmayan ID üçün avtomatik `notFound()` çağıracağı üçün, bu funksiyanın özündə əlavə yoxlamaya ehtiyac yoxdur.
 
 ### `app/posts/[id]/edit/page.tsx` (URL: `/posts/5/edit`)
-Tipi `EditPostPageProps` (`PostDetailPageProps` ilə eyni şəkildə, sadəcə fərqli ad — hər route-un öz, müstəqil tipi var, çünki gələcəkdə fərqlənə bilərlər). `getPost(id)` ilə mövcud post-u serverdə çəkir, sonra onu `<PostForm mode="edit" post={post} />`-a ötürür — formanın özü isə client tərəfdə doldurulmuş şəkildə açılır. Diqqət: `<PostForm mode="edit" post={post} />` yazılışı `PostFormProps`-un "edit" qoluna **dəqiq uyğun gəlir** (`post` verilib) — `<PostForm mode="edit" />` yazsaydı (post-suz), TypeScript bunu build zamanı tutardı.
+Tipi `EditPostPageProps` (`PostDetailPageProps` ilə eyni şəkildə, sadəcə fərqli ad — hər route-un öz, müstəqil tipi var, çünki gələcəkdə fərqlənə bilərlər). `getPost(id)` ilə mövcud post-u serverdə çəkir, sonra onu `<PostForm mode="edit" post={post} />`-a ötürür — formanın özü isə client tərəfdə doldurulmuş şəkildə açılır. Diqqət: `PostForm`-un tipi indi flat olduğu üçün (bax bölmə 8), `<PostForm mode="edit" />` yazılsa (post-suz), TypeScript bunu **artıq tutmur** (`post` hər iki rejimdə optional-dır) — bu səhvi tutmaq indi insanın diqqətinə qalıb, sadəcə bu səhifə həmişə düzgün yazdığı üçün praktikada problem yoxdur.
 
 ### `app/create/page.tsx` (URL: `/create`)
-Ən sadə səhifədir — heç bir data çəkmir (`async` deyil), sadəcə boş bir `<PostForm mode="create" />` göstərir. Bu da `PostFormProps`-un "create" qoluna uyğundur — `post` verilməsə də olar (`post?: undefined`).
+Ən sadə səhifədir — heç bir data çəkmir (`async` deyil), sadəcə boş bir `<PostForm mode="create" />` göstərir.
 
 ### `app/error.tsx`
 Next.js-in **xüsusi adlı** faylıdır — əgər hər hansı səhifədə (server və ya client tərəfdə) gözlənilməz bir xəta atılsa, Next.js avtomatik olaraq bu komponenti göstərir. Tipi (`ErrorPageProps`):
@@ -781,3 +928,18 @@ TypeScript baxımından maraqlı bir detal: `import styles from "./Button.module
 11. Yeni post artıq siyahıda görünür, çünki onun ID-si bir addım əvvəl cookie-yə yazılmışdı. `posts.map((post) => <PostCard key={post.id} post={post} />)` — `PostCard`-ın `{ post: Post }` tipi sayəsində, əgər `services` qatında kimsə yanlışlıqla `Post`-un şəklini (məs. `title`-i silsə) dəyişsəydi, bu sətir compile zamanı **dərhal** xəta verərdi, hələ brauzerdə açmadan.
 
 Bu zəncir, demək olar ki, layihədəki **bütün** qatların (həm dəyər, həm tip baxımından) necə bir-birinə bağlı işlədiyini göstərir: `app/` (səhifə) → `features/posts/` (forma + hook) → `services/` (API çağırışı) → `shared/lib/` (cookie idarəsi) → təkrar `app/` (yeni data ilə), bunların **hamısının üzərində** isə `types/` qatı dayanır və hər addımda "bu dəyərin şəkli nədir?" sualına compile vaxtı cavab verir — beləliklə bir səhv (məs. `post.titel` kimi səhv yazılmış sahə adı) brauzerə çatmadan, hətta `npm run build` mərhələsində tutulur.
+
+---
+
+## 12. Əlavə nümunə: "/posts" səhifəsində axtarış yazanda nə baş verir?
+
+1. Səhifə (`app/posts/page.tsx`, server component) əvvəlcə `getPosts()` ilə **bütün** postları (artıq ən yenidən ən köhnəyə sıralanmış, bax bölmə 3-dəki `.reverse()` izahı) çəkir, `<PostsGrid posts={posts} />`-a ötürür.
+2. `PostsGrid` (client component) açılan kimi `usePostSearch(posts)` çağırılır → `searchTerm = ""` (boş), ona görə `filteredPosts` elə `posts`-un özüdür (heç bir filtr yoxdur).
+3. İstifadəçi axtarış qutusuna `"r"` yazır → `<input>`-un `onChange`-i `setSearchTerm("r")` çağırır → `searchTerm` dərhal `"r"` olur, **input dərhal** bunu göstərir (controlled input).
+4. Amma `usePostSearch` daxilindəki `useDebounce(searchTerm, 500)` **dərhal** reaksiya vermir — 500ms-lik bir taymer başladır.
+5. İstifadəçi davam edib `"re"`, `"rea"` yazır → hər hərfdə köhnə taymer ləğv olunur (`clearTimeout`), yeni bir taymer başlayır (bax bölmə 5-dəki `useDebounce` izahı).
+6. İstifadəçi yazmağı dayandırır. 500ms keçir, heç bir yeni hərf gəlmir → taymer "yetişir" → `debouncedSearchTerm` nəhayət `"rea"` olur.
+7. Bu, `usePostSearch`-dəki `useMemo`-nun **asılılıq siyahısını** (`[posts, debouncedSearchTerm]`) dəyişdirir → filtr **yenidən** hesablanır: `posts.filter((post) => post.title.toLowerCase().includes("rea"))`.
+8. `filteredPosts` yenilənir → `PostsGrid` yenidən render olunur → nəticə sayı sətri (`"{N} results found"`) və kartların grid-i (və ya uyğun gəlməsə `EmptyState`) yeni nəticəyə görə yenilənir.
+
+**Diqqət edilməli məqam:** addım 3–6 arasında, baxmayaraq ki istifadəçi 3 hərf yazıb (`r`, `re`, `rea`), **filtr əməliyyatı cəmi bir dəfə** (addım 7-də) işə düşür — debounce-un məhz məqsədi budur: lazımsız təkrar hesablamaların qarşısını almaq.

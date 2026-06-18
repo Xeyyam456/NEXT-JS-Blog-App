@@ -16,7 +16,8 @@ export async function getPosts(): Promise<Post[]> {
   const trackedPostIds = await getTrackedPostIds();
   const posts: Post[] = [];
 
-  for (const postId of trackedPostIds) {
+  // Tracked IDs are stored oldest-first (new IDs are appended), so reverse for a newest-first feed.
+  for (const postId of [...trackedPostIds].reverse()) {
     const result = await readPost(postId);
 
     if (result.result) {

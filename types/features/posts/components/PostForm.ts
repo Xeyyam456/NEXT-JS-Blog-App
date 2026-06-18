@@ -1,5 +1,6 @@
-import type { Post } from "@/types/post";
+import type { Post, PostFormMode } from "@/types/post";
 
-export type PostFormProps =
-  | { mode: "create"; post?: undefined }
-  | { mode: "edit"; post: Post };
+export type PostFormProps = {
+  mode: PostFormMode;
+  post?: Post;
+};

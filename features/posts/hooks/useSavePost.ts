@@ -21,8 +21,8 @@ export default function useSavePost(params: UseSavePostParams): UseSavePostRetur
     setIsSubmitting(true);
 
     try {
-      const result = params.mode === "edit"
-        ? await updatePost(params.postId, formData)
+      const result = isEditMode
+        ? await updatePost(params.postId!, formData)
         : await createPost(formData);
 
       if (!result.result) {

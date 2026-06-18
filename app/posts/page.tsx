@@ -1,4 +1,4 @@
-import { PostCard } from "@/features/posts/components";
+import { PostsGrid } from "@/features/posts/components";
 import { getPosts } from "@/services/posts.server";
 import { EmptyState, Kicker } from "@/shared/ui";
 import type { Metadata } from "next";
@@ -35,11 +35,7 @@ export default async function PostsPage() {
             actionHref="/create"
           />
         ) : (
-          <div className={styles.postGrid}>
-            {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
-          </div>
+          <PostsGrid posts={posts} />
         )}
       </section>
     </main>
