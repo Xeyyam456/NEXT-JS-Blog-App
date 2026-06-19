@@ -6,3 +6,4 @@ export { default as Kicker } from "./Kicker";
 export { default as LoadingState } from "./LoadingState";
 export { default as Modal } from "./Modal";
 export { default as StatusPanel } from "./StatusPanel";
+export { default as ThemeToggle } from "./ThemeToggle";

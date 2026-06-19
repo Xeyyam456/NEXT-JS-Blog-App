@@ -20,7 +20,7 @@ Kod 5 əsas qatdan ibarətdir:
 ```
 types/           → bütün TypeScript tipləri (props, domain modelləri, API cavab formaları) — mənbə ağacını güzgüləyir
 services/        → xarici API ilə danışan funksiyalar (həm server, həm client tərəfdən çağırılır)
-shared/          → layihənin hər yerində istifadə olunan ümumi alətlər (UI komponentləri, hook-lar, köməkçi funksiyalar)
+shared/          → layihənin hər yerində istifadə olunan ümumi alətlər (UI komponentləri, hook-lar, köməkçi funksiyalar, qlobal state store-ları)
 features/posts/  → məhz "post" mövzusuna aid biznes məntiqi (hook-lar + komponentlər)
 app/             → Next.js-in route (səhifə) qovluğu — URL-lər bura uyğun gəlir
 ```
@@ -33,7 +33,7 @@ app/             → Next.js-in route (səhifə) qovluğu — URL-lər bura uyğ
 
 ### `package.json`
 Layihənin "şəxsiyyət vəsiqəsi"dir. İki hissəyə bölünür:
-- `dependencies` — proqram **işləyərkən** (runtime-da) həqiqətən lazım olan kitabxanalar: `axios` (HTTP sorğuları), `next`, `react`, `react-dom`, `sonner` (toast bildirişləri).
+- `dependencies` — proqram **işləyərkən** (runtime-da) həqiqətən lazım olan kitabxanalar: `axios` (HTTP sorğuları), `next`, `react`, `react-dom`, `sonner` (toast bildirişləri), `zustand` (dark/light tema üçün qlobal state, bax bölmə 5.1).
 - `devDependencies` — yalnız **inkişaf zamanı** (kodu yazıb yoxlayanda) lazım olan alətlər: `typescript` (tip yoxlayıcı/compiler), `@types/node`, `@types/react`, `@types/react-dom` (Node.js, React və React-DOM-un öz tip təsvirləri — bunlar olmasa TypeScript `document`, `useState`, `process` kimi şeyləri "tanımaz"), `eslint` + `eslint-config-next`, `tailwindcss` + `@tailwindcss/postcss`.
 
 Həmçinin hansı terminal əmrlərinin mövcud olduğunu göstərir: `npm run dev`, `npm run build`, `npm run start`, `npm run lint`. Yeni bir kitabxana quraşdırılanda (`npm install paket-adı`) bu fayl avtomatik yenilənir.
@@ -159,6 +159,7 @@ export type PostFormMode = "create" | "edit";
 | `types/shared/hooks/useDisclosure.ts` | `UseDisclosureReturn` | `shared/hooks/useDisclosure.ts` |
 | `types/shared/hooks/useModalLifecycle.ts` | `UseModalLifecycleParams` | `shared/hooks/useModalLifecycle.ts` |
 | `types/shared/hooks/useTrackedPosts.ts` | `UseTrackedPostsReturn` | `shared/hooks/useTrackedPosts.ts` |
+| `types/shared/stores/useThemeStore.ts` | `Theme`, `ThemeStore` | `shared/stores/useThemeStore.ts` |
 | `types/shared/ui/Button.ts` | `ButtonProps` | `shared/ui/Button/index.tsx` |
 | `types/shared/ui/Kicker.ts` | `KickerProps` | `shared/ui/Kicker/index.tsx` |
 | `types/shared/ui/Modal.ts` | `ModalProps` | `shared/ui/Modal/index.tsx` |
@@ -511,6 +512,49 @@ Bu sayədə başqa fayllarda `import { useDisclosure } from "@/shared/hooks"` ya
 
 ---
 
+## 5.1. `shared/stores/` — Qlobal state idarəetməsi (Zustand)
+
+Bu, layihənin **ilk Zustand store-udur** — dark/light tema seçimini idarə edir. Niyə bunun üçün `useState`/cookie deyil, ayrıca bir kitabxana (Zustand)? Çünki temaya bir neçə **fərqli, bir-birinə bağlı olmayan** komponent (`ThemeToggle`, `AppToaster`) eyni zamanda ehtiyac duyur — `useState` hər komponentin öz, ayrı surəti olardı (sinxron qalmazdı), amma Zustand-ın `create()`-i ilə yaradılan store **bir dənədir**, hansı komponent oxuyursa-oxusun, eyni dəyəri görür.
+
+### `shared/stores/useThemeStore.ts`
+```ts
+import { create } from "zustand";
+import type { Theme, ThemeStore } from "@/types/shared/stores/useThemeStore";
+
+export const THEME_STORAGE_KEY = "pulse-theme";
+
+function applyThemeToDocument(theme: Theme): void {
+  if (typeof document === "undefined") return;
+  document.documentElement.dataset.theme = theme;
+}
+
+export const useThemeStore = create<ThemeStore>((set, get) => ({
+  theme: "dark",
+  setTheme: (theme) => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    }
+    applyThemeToDocument(theme);
+    set({ theme });
+  },
+  toggleTheme: () => {
+    const nextTheme: Theme = get().theme === "dark" ? "light" : "dark";
+    get().setTheme(nextTheme);
+  },
+}));
+```
+- `Theme = "dark" | "light"` və `ThemeStore = { theme: Theme; setTheme: (theme: Theme) => void; toggleTheme: () => void }` tipləri `types/shared/stores/useThemeStore.ts`-dədir (bax bölmə 2) — layihənin "tiplər həmişə `types/`-də, mənbə faylının daxilində yox" qaydasına burada da əməl olunub.
+- `create<ThemeStore>((set, get) => ({ ... }))` — Zustand-ın özü bu funksiyanı çağırıb bir **hook** qaytarır (`useThemeStore`). `set` store-un dəyərini yeniləyir, `get()` isə store-un **hazırkı** dəyərini oxumaq üçündür (React-in `useState`-indəki "setter funksiyasına funksiya ötür" üsuluna bənzəyir, sadəcə Zustand-da `get()` adlı ayrıca bir alət var).
+- `applyThemeToDocument` — `document.documentElement.dataset.theme = theme` yazır, yəni `<html data-theme="light">` kimi bir atribut qoyur/dəyişir. Niyə React state-i (`className` və s.) yox, birbaşa DOM atributu? Çünki `styles/globals.css`-dəki `[data-theme="light"] { ... }` seçicisi məhz bu atributa baxır — CSS dəyişəni (`--background` və s.) bu atributun olub-olmamasına görə dəyişir, React-in heç bir render-ə ehtiyacı olmadan (sırf CSS-in öz işidir).
+- `typeof document === "undefined"` / `typeof window === "undefined"` yoxlamaları — bu fayl həm server, həm client tərəfdə import oluna bilər (Next.js-in App Router-i bəzən server komponentlərdə də idxal zənciri yaradır), server tərəfdə nə `document`, nə `window` mövcud deyil, ona görə bu yoxlamalar olmasa server-də xəta (`ReferenceError`) atılardı.
+- `setTheme` həm `localStorage`-a yazır, həm DOM atributunu dəyişir, həm də Zustand-ın öz state-ini (`set({ theme })`) yeniləyir — **üç yeri də bir funksiyada sinxron saxlamaq** üçün belə yazılıb (`shared/lib/tracked-posts.ts`-dəki cookie-yazan funksiyaların məntiqinə bənzəyir).
+- `toggleTheme` sadəcə hazırkı temanın **əksini** hesablayıb `setTheme`-i çağırır — təkrar kod yazmamaq üçün.
+
+### `shared/stores/index.ts`
+Barrel file — `export { useThemeStore } from "./useThemeStore";` (digər barrel-lərdən fərqli olaraq `default` export deyil, çünki `useThemeStore.ts` özü `default` ixrac etmir, adlı (`named`) ixrac edir — bu, Zustand-ın özünün adət etdiyi üsuldur).
+
+---
+
 ## 6. `shared/ui/` — Təkrar istifadə olunan görünüş (UI) komponentləri
 
 Bu qovluqdakı komponentlərin heç biri "post" sözünü bilmir — onlar tamamilə ümumi, istənilən layihədə işlənə bilən "tikinti hissələri"dir (Button, Modal və s.).
@@ -593,8 +637,32 @@ return createPortal(
 ### `shared/ui/EditorialFormLayout/index.tsx`
 "Create" və "Edit" səhifələrinin hər ikisinin istifadə etdiyi ortaq tərtibatdır (sol tərəfdə başlıq+açıqlama, sağ tərəfdə forma qutusu). Props vasitəsilə fərqli mətn göstərir, amma struktur eynidir. Tipi `{ introKicker: string; title: string; description: string; endpoint: string; endpointSummary: string; children: ReactNode }`-dur — bütün sahələr **məcburidir** (`?` yoxdur), çünki bu layout-u çağıran hər iki səhifə (`app/create/page.tsx`, `app/posts/[id]/edit/page.tsx`) onların hamısını verir.
 
+### `shared/ui/ThemeToggle/index.tsx`
+Header-dəki günəş/ay düyməsi — tıklananda tema dəyişir:
+```tsx
+"use client";
+
+import { useThemeStore } from "@/shared/stores";
+
+export default function ThemeToggle() {
+  const theme = useThemeStore((state) => state.theme);
+  const toggleTheme = useThemeStore((state) => state.toggleTheme);
+
+  return (
+    <button type="button" onClick={toggleTheme} aria-label={...}>
+      {theme === "dark" ? <svg>...günəş ikonu...</svg> : <svg>...ay ikonu...</svg>}
+    </button>
+  );
+}
+```
+- `useThemeStore((state) => state.theme)` — Zustand-ın hook-u **seçici (selector) funksiya** qəbul edir: store-un bütün obyektini yox, yalnız bizə lazım olan tək sahəni (`theme`) "seçib" qaytarır. Bu vacibdir: əgər `setTheme` kimi başqa bir sahə dəyişsəydi (`theme` dəyişməsə), bu komponent **yenidən render olunmazdı** — performans üçün faydalıdır (lazımsız render-lərin qarşısı alınır).
+- İki ayrı `useThemeStore(...)` çağırışı (biri `theme`, biri `toggleTheme` üçün) eyni səbəbdəndir — hər sahə öz seçicisi ilə oxunur.
+- `aria-label` tema vəziyyətinə görə dəyişir ("Switch to light theme" / "Switch to dark theme") — ekran oxuyucusu istifadəçiləri üçün düymənin nə edəcəyini söyləyir, çünki düymənin daxilində yalnız bir ikon var, mətn yoxdur.
+- İkonlar **inline SVG**-dir (ayrıca bir ikon kitabxanası `npm install` edilməyib) — sadə günəş/ay şəklini birbaşa `<svg>` ilə çəkmək, layihəyə yeni asılılıq əlavə etməkdən daha sadədir, çünki cəmi iki kiçik ikon lazımdır.
+- Heç bir props qəbul etmədiyi üçün ayrıca tip faylı yoxdur (`AppToaster` ilə eyni səbəb).
+
 ### `shared/ui/index.ts`
-Yenə bir "barrel file" — bütün `shared/ui` komponentlərini tək yerdən idxal etməyə imkan verir (`import { Button, Modal } from "@/shared/ui"`).
+Yenə bir "barrel file" — bütün `shared/ui` komponentlərini tək yerdən idxal etməyə imkan verir (`import { Button, Modal, ThemeToggle } from "@/shared/ui"`).
 
 ---
 
@@ -604,12 +672,44 @@ Yenə bir "barrel file" — bütün `shared/ui` komponentlərini tək yerdən id
 ```tsx
 "use client";
 
-<Toaster richColors closeButton theme="dark" position="top-right" toastOptions={{ className: styles.toast }} />
+import { useThemeStore } from "@/shared/stores";
+
+export default function AppToaster() {
+  const theme = useThemeStore((state) => state.theme);
+
+  return (
+    <Toaster richColors closeButton theme={theme} position="top-right" toastOptions={{ className: styles.toast }} />
+  );
+}
 ```
-Bu, "sonner" kitabxanasının özünün hazır komponentidir — bütün toast bildirişlərinin harada (yuxarı-sağ), necə rənglənəcəyini (`richColors` + `theme="dark"` → uğur=yaşıl, xəta=qırmızı, xəbərdarlıq=sarı) və hansı əlavə stili daşıyacağını (`styles.toast`) təyin edir. Heç bir props qəbul etmədiyi üçün ayrıca tip faylı yoxdur. `app/layout.tsx`-də **bir dəfə** çağırılır, bütün tətbiq üçün kifayətdir.
+Bu, "sonner" kitabxanasının özünün hazır komponentidir — bütün toast bildirişlərinin harada (yuxarı-sağ), necə rənglənəcəyini və hansı əlavə stili daşıyacağını (`styles.toast`) təyin edir. **Diqqət:** `theme="dark"` əvvəllər sabit (hardcoded) yazılmışdı, indi `useThemeStore`-dan oxunur — beləliklə istifadəçi günəş/ay düyməsi ilə temayı dəyişəndə (bax `ThemeToggle`, bölmə 6), toast-ların öz rəngləri (`richColors` → uğur=yaşıl, xəta=qırmızı, xəbərdarlıq=sarı) də sayt ilə **eyni vaxtda** uyğunlaşır, ayrıca heç bir əlavə kod lazım olmadan (Zustand store-un özü bunu pulsuz verir, çünki hər iki komponent eyni store-u "dinləyir"). Heç bir props qəbul etmədiyi üçün ayrıca tip faylı yoxdur. `app/layout.tsx`-də **bir dəfə** çağırılır, bütün tətbiq üçün kifayətdir.
+
+### `shared/providers/ThemeInitializer.tsx`
+```tsx
+"use client";
+
+import { useThemeStore } from "@/shared/stores";
+import { useEffect } from "react";
+import type { Theme } from "@/types/shared/stores/useThemeStore";
+
+export default function ThemeInitializer() {
+  useEffect(() => {
+    const documentTheme = document.documentElement.dataset.theme as Theme | undefined;
+    if (documentTheme) {
+      useThemeStore.setState({ theme: documentTheme });
+    }
+  }, []);
+
+  return null;
+}
+```
+Bu komponentin **heç bir görünüşü yoxdur** (`return null`) — yeganə işi, səhifə ilk dəfə yüklənəndə Zustand store-un yaddaşdaki (`theme: "dark"` defolt) dəyərini, `<html>`-in üzərindəki **həqiqi** `data-theme` atributu ilə üst-üstə salmaqdır. Bu niyə lazımdır? Çünki `<html>`-in `data-theme` atributu **React-dən əvvəl**, bir `<script>` ilə (`app/layout.tsx`-dəki `beforeInteractive` script-i, bax bölmə 9) `localStorage`-dan oxunaraq qoyulur — amma Zustand store-un öz daxili `theme` dəyişəni bunu **bilmir**, hələ də `"dark"` defolt dəyərindədir. Əgər bu sinxronlaşdırma olmasaydı, məsələn istifadəçi "light" seçmiş olsa belə, səhifə açılanda fon düzgün (script sayəsində) ağ olardı, amma `ThemeToggle`-dəki ikon səhv (günəş əvəzinə ay) görünərdi, çünki o, Zustand-ın (hələ sinxronlaşmamış) `"dark"` dəyərinə baxır.
+- `useEffect(..., [])` — boş asılılıq massivi (`[]`) sayəsində bu, komponent **bir dəfə, yalnız mount olanda** (səhifə ilk dəfə brauzerdə göründükdə) işə düşür.
+- `useThemeStore.setState({ theme: documentTheme })` — diqqət, bu, `setTheme`/`toggleTheme` **action-larını çağırmır**, Zustand-ın hər store-a avtomatik verdiyi xam `setState`-i birbaşa işlədir. Səbəb: `setTheme` çağırılsaydı, o, yenidən `localStorage`-a yazardı və DOM atributunu yenidən təyin edərdi — amma bunların **hər ikisi artıq düzgündür** (elə həmin script onları qoyub), təkrar etmək lazımsızdır, sadəcə store-un öz yaddaşını həqiqətə "ayıltmaq" kifayətdir.
+- Heç bir props qəbul etmədiyi üçün ayrıca tip faylı yoxdur. `app/layout.tsx`-də `<AppToaster />`-in yanında, bir dəfə çağırılır.
 
 ### `shared/providers/index.ts`
-Barrel file — `export { default as AppToaster } from "./AppToaster";`.
+Barrel file — `export { default as AppToaster } from "./AppToaster"; export { default as ThemeInitializer } from "./ThemeInitializer";`.
 
 ---
 
@@ -824,10 +924,20 @@ Next.js-də `app/` qovluğunun içindəki **qovluq strukturu = URL strukturu**du
 **Bütün səhifələri əhatə edən** kök şablon. Tipi `RootLayoutProps` → `{ children: ReactNode }`. Burada:
 - `import "../styles/globals.css"` — bütün tətbiq üçün ümumi stillər bir dəfə yüklənir.
 - `export const metadata: Metadata = { title: "Pulse Press", ... }` — `Metadata` Next.js-in özünün tipidir, `<title>` və `<meta description>` kimi sahələrin **adlarını səhv yazmağın** qarşısını compile vaxtı alır.
-- Header (logo + naviqasiya menyusu) — `position: sticky` sayəsində scroll edəndə yuxarıda qalır.
+- `<html lang="en" suppressHydrationWarning>` — `suppressHydrationWarning` React-ə deyir: "bu elementin atributlarında server və client arasında fərq olsa, xəbərdarlıq vermə". Bu, məhz `data-theme` atributu üçün lazımdır — server `<html>`-i `data-theme`-siz göndərir, amma brauzerdə React "hydrate" (canlandırmaq) etməzdən **əvvəl** aşağıdaki script onu artıq dəyişdirmiş olur, React bunu "kim isə mənim arxamca dəyişib" kimi görüb xəbərdarlıq verməsin deyə bu lazımdır.
+- `<Script id="theme-init" strategy="beforeInteractive">{THEME_INIT_SCRIPT}</Script>` — `next/script`-in xüsusi bir komponentidir, `<head>` daxilində yerləşir. `strategy="beforeInteractive"` Next.js-ə deyir: "bu kodu React-in özü işə düşməzdən, hətta səhifə tam render olunmazdan **əvvəl**, ən tez fürsətdə çalıştır". `THEME_INIT_SCRIPT` sadə bir mətndir (`` ` ``-larla yazılmış xam JavaScript):
+  ```js
+  try {
+    var theme = localStorage.getItem("pulse-theme") === "light" ? "light" : "dark";
+    document.documentElement.dataset.theme = theme;
+  } catch (e) {}
+  ```
+  Niyə bu qədər tez (React-dən əvvəl) işləməlidir? Çünki məqsəd "FOUC"-un (Flash Of Unstyled/wrong Content — səhv rəngin bir anlıq "yanıb-keçməsi") qarşısını almaqdır: əgər tema React render olandan **sonra** (məs. bir `useEffect`-də) tətbiq olunsaydı, istifadəçi hər səhifə yeniləməsində bir anlıq köhnə (defolt qara) rəngi görüb, sonra düzgün rəngə keçidin "sıçrayışını" görərdi. `try/catch` — `localStorage`-a giriş bəzi brauzer tənzimləmələrində (məs. "üçüncü tərəf cookie-ləri blokla") xəta ata bilər, bu halda sadəcə heç nə etmədən defolt (`dark`, `:root`-dakı dəyərlər) qalır.
+- Header (logo + naviqasiya menyusu + `<ThemeToggle />`) — `position: sticky` sayəsində scroll edəndə yuxarıda qalır. `nav` (Home/Posts/Create linkləri) və `ThemeToggle` indi bir `.navGroup` flex sarğısının (wrapper) daxilindədir, ona görə vizual olaraq yan-yana görünürlər, amma `headerInner`-in `justify-content: space-between`-i hələ də yalnız iki "blok" görür: brand və (nav+toggle) cütlüyü.
 - `{children}` — bu, hazırkı səhifənin (`page.tsx`-in) məzmunudur; Next.js bunu avtomatik bura yerləşdirir (`children: ReactNode` tipi bunu təmin edir).
 - Footer (brand, linklər, "API connection live" statusu).
 - `<AppToaster />` — toast bildiriş sistemi, bir dəfə bura qoyulur, bütün səhifələrdə işləyir.
+- `<ThemeInitializer />` — görünüşü olmayan komponent, Zustand store-un yaddaşını yuxarıdaki script-in artıq qoyduğu həqiqi `data-theme` dəyəri ilə sinxronlaşdırır (ətraflı izah bölmə 7-də).
 
 ### `app/page.tsx` (Ana səhifə, URL: `/`)
 ```ts

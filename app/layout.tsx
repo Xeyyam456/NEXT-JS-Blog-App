@@ -1,6 +1,8 @@
 import "../styles/globals.css";
-import { AppToaster } from "@/shared/providers";
+import { AppToaster, ThemeInitializer } from "@/shared/providers";
+import { ThemeToggle } from "@/shared/ui";
 import Link from "next/link";
+import Script from "next/script";
 import type { Metadata } from "next";
 import styles from "./layout.module.css";
 import type { RootLayoutProps } from "@/types/app/layout";
@@ -10,9 +12,21 @@ export const metadata: Metadata = {
   description: "Server-rendered CRUD blog app powered by internal API routes",
 };
 
+const THEME_INIT_SCRIPT = `
+  try {
+    var theme = localStorage.getItem("pulse-theme") === "light" ? "light" : "dark";
+    document.documentElement.dataset.theme = theme;
+  } catch (e) {}
+`;
+
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <Script id="theme-init" strategy="beforeInteractive">
+          {THEME_INIT_SCRIPT}
+        </Script>
+      </head>
       <body>
         <div className={styles.frame}>
           <header className={styles.header}>
@@ -22,11 +36,15 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 <span>Press</span>
               </Link>
 
-              <nav className={styles.nav}>
-                <Link href="/">Home</Link>
-                <Link href="/posts">Posts</Link>
-                <Link href="/create">Create</Link>
-              </nav>
+              <div className={styles.navGroup}>
+                <nav className={styles.nav}>
+                  <Link href="/">Home</Link>
+                  <Link href="/posts">Posts</Link>
+                  <Link href="/create">Create</Link>
+                </nav>
+
+                <ThemeToggle />
+              </div>
             </div>
           </header>
 
@@ -67,6 +85,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
         </footer>
 
         <AppToaster />
+        <ThemeInitializer />
       </body>
     </html>
   );
